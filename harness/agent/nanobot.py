@@ -187,7 +187,6 @@ class NanoBotAgent(BaseAgent):
         self._tools.register(ExecTool(
             working_dir=str(self.workspace),
             restrict_to_workspace=True,
-            workspace=self.workspace,
         ))
 
         # 注册 web 工具
