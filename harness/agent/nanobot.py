@@ -361,13 +361,18 @@ class NanoBotAgent(BaseAgent):
             requested_model = model or self.model
             is_openrouter = self.api_url and "openrouter" in self.api_url.lower()
             is_azure_proxy = self.api_url and "azure" in self.api_url.lower()
+            is_anthropic_compat = self.api_url and "anthropic" in self.api_url.lower()
 
             if is_openrouter:
                 if not requested_model.startswith("openrouter/"):
                     requested_model = f"openrouter/{requested_model}"
+            elif is_anthropic_compat:
+                # Anthropic-compatible APIs (e.g. MiniMax, GLM)
+                if not requested_model.startswith("anthropic/"):
+                    requested_model = f"anthropic/{requested_model}"
 
             # For OpenAI-compatible APIs, add openai/ prefix for litellm routing
-            if not is_openrouter and not is_azure_proxy:
+            if not is_openrouter and not is_azure_proxy and not is_anthropic_compat:
                 if not requested_model.startswith("openai/"):
                     requested_model = f"openai/{requested_model}"
 
