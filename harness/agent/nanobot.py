@@ -178,10 +178,10 @@ class NanoBotAgent(BaseAgent):
     def _register_tools(self) -> None:
         """注册工具"""
         # 注册文件系统工具
-        self._tools.register(ReadFileTool(workspace=self.workspace))
-        self._tools.register(WriteFileTool(workspace=self.workspace))
-        self._tools.register(ListDirTool(workspace=self.workspace))
-        self._tools.register(EditFileTool(workspace=self.workspace))
+        self._tools.register(ReadFileTool(workspace=self.workspace, allowed_dir=self.workspace))
+        self._tools.register(WriteFileTool(workspace=self.workspace, allowed_dir=self.workspace))
+        self._tools.register(ListDirTool(workspace=self.workspace, allowed_dir=self.workspace))
+        self._tools.register(EditFileTool(workspace=self.workspace, allowed_dir=self.workspace))
 
         # 注册 shell 工具
         self._tools.register(ExecTool(
@@ -901,7 +901,7 @@ class NanoBotAgent(BaseAgent):
 
         return content if content else "Max iterations reached"
 
-    def execute(self, prompt: str, session_id: str | None = None, workspace: Path | None = None) -> AgentResult:
+    def execute(self, prompt: str, session_id: str | None = None, workspace: Path | None = None, **kwargs) -> AgentResult:
         """执行单个 prompt"""
         start_time = time.time()
         error_msg = ""
