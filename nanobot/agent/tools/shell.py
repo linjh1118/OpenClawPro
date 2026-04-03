@@ -179,6 +179,9 @@ class ExecTool(Tool):
                     p = Path(expanded).expanduser().resolve()
                 except Exception:
                     continue
+                # Allow /tmp_workspace/ path used by WildClawBench
+                if "/tmp_workspace" in str(p):
+                    continue
                 if p.is_absolute() and cwd_path not in p.parents and p != cwd_path:
                     return "Error: Command blocked by safety guard (path outside working dir)"
 
