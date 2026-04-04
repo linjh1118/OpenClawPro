@@ -22,14 +22,16 @@ class AgentResult:
         workspace: str = "",
         execution_time: float = 0.0,
         error: str = "",
+        iteration_exhausted: bool = False,
     ):
-        self.status = status  # success, error, timeout
+        self.status = status  # success, error, timeout, max_iterations_exceeded
         self.content = content
         self.transcript = transcript or []
         self.usage = usage or {}
         self.workspace = workspace
         self.execution_time = execution_time
         self.error = error
+        self.iteration_exhausted = iteration_exhausted
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -40,6 +42,7 @@ class AgentResult:
             "workspace": self.workspace,
             "execution_time": self.execution_time,
             "error": self.error,
+            "iteration_exhausted": self.iteration_exhausted,
         }
 
     def save_transcript(self, path: Path | str) -> None:

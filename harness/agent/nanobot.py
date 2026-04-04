@@ -187,6 +187,7 @@ class NanoBotAgent(BaseAgent):
         self._tools.register(ExecTool(
             working_dir=str(self.workspace),
             restrict_to_workspace=True,
+            disable_safety_guard=kwargs.get("disable_safety_guard", False),
         ))
 
         # 注册 web 工具
@@ -598,7 +599,7 @@ class NanoBotAgent(BaseAgent):
         ]
         messages.append(self._build_plan_system_message(plan, revision=bool(revision_reason)))
 
-    async def _run_loop(self, messages: List[Dict], max_iterations: int = 10) -> str:
+    async def _run_loop(self, messages: List[Dict], max_iterations: int = 50) -> str:
         """运行 agent loop"""
         tool_defs = self._tools.get_definitions()
         iteration = 0
@@ -976,7 +977,8 @@ class NanoBotAgent(BaseAgent):
             })
 
             # 使用 asyncio 运行
-            content = asyncio.run(self._run_loop(messages))
+            max_iters = kwargs.get("max_iterations", 50)
+            content = asyncio.run(self._run_loop(messages, max_iterations=max_iters))
             self._logger.debug(f"[execute] _run_loop returned, content length: {len(content) if content else 0}, transcript entries: {len(self._transcript)}")
             self._save_session_messages(session_id, messages)
 
@@ -990,6 +992,10 @@ class NanoBotAgent(BaseAgent):
 
         # 确定状态
         status = "success"
+        iteration_exhausted = False
+        if content == "Max iterations reached":
+            status = "max_iterations_exceeded"
+            iteration_exhausted = True
         if error_msg:
             status = "error"
             if "timed out" in error_msg.lower():
@@ -1059,6 +1065,7 @@ class NanoBotAgent(BaseAgent):
             workspace=str(current_workspace),
             execution_time=execution_time,
             error=error_msg,
+            iteration_exhausted=iteration_exhausted,
         )
 
     def execute_multi(

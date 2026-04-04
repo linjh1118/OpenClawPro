@@ -23,10 +23,12 @@ class ExecTool(Tool):
         allow_patterns: list[str] | None = None,
         restrict_to_workspace: bool = False,
         path_append: str = "",
+        disable_safety_guard: bool = False,
     ):
         self.timeout = timeout
         self.working_dir = working_dir
-        self.deny_patterns = deny_patterns or [
+        self.disable_safety_guard = disable_safety_guard
+        self.deny_patterns = [] if disable_safety_guard else (deny_patterns or [
             r"\brm\s+-[rf]{1,2}\b",          # rm -r, rm -rf, rm -fr
             r"\bdel\s+/[fq]\b",              # del /f, del /q
             r"\brmdir\s+/s\b",               # rmdir /s
@@ -36,9 +38,9 @@ class ExecTool(Tool):
             r">\s*/dev/sd",                  # write to disk
             r"\b(shutdown|reboot|poweroff)\b",  # system power
             r":\(\)\s*\{.*\};\s*:",          # fork bomb
-        ]
+        ])
         self.allow_patterns = allow_patterns or []
-        self.restrict_to_workspace = restrict_to_workspace
+        self.restrict_to_workspace = False if disable_safety_guard else restrict_to_workspace
         self.path_append = path_append
 
     @property
@@ -152,6 +154,8 @@ class ExecTool(Tool):
 
     def _guard_command(self, command: str, cwd: str) -> str | None:
         """Best-effort safety guard for potentially destructive commands."""
+        if self.disable_safety_guard:
+            return None
         cmd = command.strip()
         lower = cmd.lower()
 
@@ -181,6 +185,9 @@ class ExecTool(Tool):
                     continue
                 # Allow /tmp_workspace/ path used by WildClawBench
                 if "/tmp_workspace" in str(p):
+                    continue
+                # Allow standard Unix device files (e.g., /dev/null, /dev/stdout, /dev/stderr)
+                if str(p).startswith("/dev/"):
                     continue
                 if p.is_absolute() and cwd_path not in p.parents and p != cwd_path:
                     return "Error: Command blocked by safety guard (path outside working dir)"
