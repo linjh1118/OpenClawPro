@@ -59,6 +59,7 @@ class NanoBotAgent(BaseAgent):
         self.api_key = api_key
         self.workspace = workspace
         self.timeout = timeout
+        self.kwargs = kwargs
         self.session_store_dir = Path(kwargs.get("session_store_dir") or (self.workspace / ".sessions"))
         self.session_store_dir.mkdir(parents=True, exist_ok=True)
         self.system_prompt = kwargs.get("system_prompt", "")
@@ -187,7 +188,7 @@ class NanoBotAgent(BaseAgent):
         self._tools.register(ExecTool(
             working_dir=str(self.workspace),
             restrict_to_workspace=True,
-            disable_safety_guard=kwargs.get("disable_safety_guard", False),
+            disable_safety_guard=self.kwargs.get("disable_safety_guard", False),
         ))
 
         # 注册 web 工具
@@ -294,7 +295,7 @@ class NanoBotAgent(BaseAgent):
             return
 
         # Create async LLM caller wrapper
-        async def llm_call_fn(messages, model=None, tools=None, max_tokens=4096):
+        async def llm_call_fn(messages, model=None, tools=None, max_tokens=8192):
             return await self._call_llm(messages, model=model, tools=tools, max_tokens=max_tokens)
 
         # Create roles
@@ -599,7 +600,7 @@ class NanoBotAgent(BaseAgent):
         ]
         messages.append(self._build_plan_system_message(plan, revision=bool(revision_reason)))
 
-    async def _run_loop(self, messages: List[Dict], max_iterations: int = 50) -> str:
+    async def _run_loop(self, messages: List[Dict], max_iterations: int = 50, max_output_tokens: int = 8192) -> str:
         """运行 agent loop"""
         tool_defs = self._tools.get_definitions()
         iteration = 0
@@ -705,7 +706,7 @@ class NanoBotAgent(BaseAgent):
 
             # 调用 LLM
             try:
-                response = await self._call_llm(messages, tools=tool_defs)
+                response = await self._call_llm(messages, tools=tool_defs, max_tokens=max_output_tokens)
             except Exception as e:
                 self._logger.error(f"[_run_loop] _call_llm exception: {type(e).__name__}: {e}")
                 return f"Error: {e}"
@@ -978,7 +979,8 @@ class NanoBotAgent(BaseAgent):
 
             # 使用 asyncio 运行
             max_iters = kwargs.get("max_iterations", 50)
-            content = asyncio.run(self._run_loop(messages, max_iterations=max_iters))
+            max_output_tokens = kwargs.get("max_output_tokens", 8192)
+            content = asyncio.run(self._run_loop(messages, max_iterations=max_iters, max_output_tokens=max_output_tokens))
             self._logger.debug(f"[execute] _run_loop returned, content length: {len(content) if content else 0}, transcript entries: {len(self._transcript)}")
             self._save_session_messages(session_id, messages)
 
