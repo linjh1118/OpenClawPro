@@ -1100,3 +1100,171 @@ class NanoBotAgent(BaseAgent):
     def cleanup(self) -> None:
         """清理资源"""
         pass
+
+
+# ============================================================================
+# Harbor Architecture: Agent runs on host, commands execute in container
+# ============================================================================
+
+class DockerExecTool(ExecTool):
+    """ExecTool that runs commands inside a Docker container via docker exec.
+
+    This is used in the Harbor architecture where:
+    - NanoBotAgent runs on the host machine (Python 3.11)
+    - Commands are executed inside a container via `docker exec`
+    - Workspace is mounted from host to container at the same path
+    """
+
+    def __init__(
+        self,
+        container_name: str,
+        mount_point: str = "/workspace",
+        working_dir: str | None = None,
+        deny_patterns: list[str] | None = None,
+        allow_patterns: list[str] | None = None,
+        restrict_to_workspace: bool = False,
+        path_append: str = "",
+        disable_safety_guard: bool = False,
+    ):
+        # Parent init but we override execute()
+        super().__init__(
+            timeout=600,  # Override default 60s timeout for docker exec
+            working_dir=working_dir,
+            deny_patterns=deny_patterns,
+            allow_patterns=allow_patterns,
+            restrict_to_workspace=restrict_to_workspace,
+            path_append=path_append,
+            disable_safety_guard=disable_safety_guard,
+        )
+        self.container_name = container_name
+        self.mount_point = mount_point
+
+    async def execute(
+        self, command: str, working_dir: str | None = None,
+        timeout: int | None = None, **kwargs,
+    ) -> str:
+        """Execute command inside Docker container via docker exec."""
+        # Determine the working directory inside the container
+        # If the host working_dir is a subdir of mount_point, translate it
+        cwd = working_dir or self.working_dir or "/workspace"
+
+        # Translate host path to container path if it's under the mount point
+        container_cwd = cwd
+        if cwd.startswith(self.mount_point) or cwd.startswith("/tmp/"):
+            # The workspace is mounted at mount_point in the container
+            # Host path might be different (e.g., /tmp/skillsbench_workspace/task1)
+            # But since files are what matter (not cwd), we use mount_point directly
+            container_cwd = self.mount_point
+
+        guard_error = self._guard_command(command, cwd)
+        if guard_error:
+            return guard_error
+
+        effective_timeout = min(timeout or self.timeout, self._MAX_TIMEOUT)
+
+        # Build docker exec command
+        # Use bash -c to run the command, with -w to set working directory
+        docker_cmd = [
+            "docker", "exec",
+            "-w", container_cwd,
+            self.container_name,
+            "bash", "-c", command
+        ]
+
+        try:
+            process = await asyncio.create_subprocess_shell(
+                " ".join(docker_cmd),  # Use shell to handle the command properly
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=cwd,  # Use host cwd for context
+                env=kwargs.get("env"),
+            )
+
+            try:
+                stdout, stderr = await asyncio.wait_for(
+                    process.communicate(),
+                    timeout=effective_timeout,
+                )
+            except asyncio.TimeoutError:
+                process.kill()
+                try:
+                    await asyncio.wait_for(process.wait(), timeout=5.0)
+                except asyncio.TimeoutError:
+                    pass
+                finally:
+                    if sys.platform != "win32":
+                        try:
+                            os.waitpid(process.pid, os.WNOHANG)
+                        except (ProcessLookupError, ChildProcessError):
+                            pass
+                return f"Error: Command timed out after {effective_timeout} seconds"
+
+            output_parts = []
+
+            if stdout:
+                output_parts.append(stdout.decode("utf-8", errors="replace"))
+
+            if stderr:
+                stderr_text = stderr.decode("utf-8", errors="replace")
+                if stderr_text.strip():
+                    output_parts.append(f"STDERR:\n{stderr_text}")
+
+            output_parts.append(f"\nExit code: {process.returncode}")
+
+            result = "\n".join(output_parts) if output_parts else "(no output)"
+
+            # Head + tail truncation
+            max_len = self._MAX_OUTPUT
+            if len(result) > max_len:
+                half = max_len // 2
+                result = (
+                    result[:half]
+                    + f"\n\n... ({len(result) - max_len:,} chars truncated) ...\n\n"
+                    + result[-half:]
+                )
+
+            return result
+
+        except Exception as e:
+            return f"Error executing command: {str(e)}"
+
+
+class HarborNanoBotAgent(NanoBotAgent):
+    """NanoBotAgent variant for Harbor architecture.
+
+    In Harbor architecture:
+    - Agent runs on the host machine (with Python 3.11)
+    - File operations happen on the host filesystem (workspace mounted to container)
+    - Command execution happens inside the container via docker exec
+
+    Use this when task containers have base images that don't include Python 3.11.
+    """
+
+    def __init__(
+        self,
+        container_name: str,
+        mount_point: str = "/workspace",
+        **kwargs,
+    ):
+        self.container_name = container_name
+        self.mount_point = mount_point
+        super().__init__(**kwargs)
+
+    def _register_tools(self) -> None:
+        """Register tools with DockerExecTool for command execution in container."""
+        from nanobot.agent.tools.filesystem import ReadFileTool, WriteFileTool, ListDirTool, EditFileTool
+
+        # Register filesystem tools (work on host workspace, visible in container)
+        self._tools.register(ReadFileTool(workspace=self.workspace, allowed_dir=self.workspace))
+        self._tools.register(WriteFileTool(workspace=self.workspace, allowed_dir=self.workspace))
+        self._tools.register(ListDirTool(workspace=self.workspace, allowed_dir=self.workspace))
+        self._tools.register(EditFileTool(workspace=self.workspace, allowed_dir=self.workspace))
+
+        # Register shell tool that executes inside container
+        self._tools.register(DockerExecTool(
+            container_name=self.container_name,
+            mount_point=self.mount_point,
+            working_dir=str(self.workspace),
+            restrict_to_workspace=True,
+            disable_safety_guard=self.kwargs.get("disable_safety_guard", False),
+        ))
