@@ -461,6 +461,10 @@ class NanoBotAgent(BaseAgent):
                     }
                 return response
 
+            # For Anthropic-compatible APIs, litellm checks ANTHROPIC_API_KEY env var
+            if is_anthropic_compat and self.api_key:
+                os.environ["ANTHROPIC_API_KEY"] = self.api_key
+
             kwargs = {
                 "model": requested_model,
                 "messages": messages,
@@ -1176,7 +1180,8 @@ class DockerExecTool(ExecTool):
                 " ".join(docker_cmd),  # Use shell to handle the command properly
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                cwd=cwd,  # Use host cwd for context
+                # Don't set cwd on host - the command runs in container via docker exec
+                # The container working directory is already set via -w flag
                 env=kwargs.get("env"),
             )
 

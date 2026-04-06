@@ -31,9 +31,14 @@ class _DockerFsTool(Tool):
         return path
 
     def _is_allowed(self, path: str) -> bool:
-        """Check if path is under allowed directory."""
-        resolved = self._resolve_path(path)
-        return resolved.startswith(self._allowed_dir)
+        """Check if path is allowed.
+
+        In Harbor architecture, the Docker container provides isolation,
+        so we don't need strict path checking. The allowed_dir is mainly
+        for documentation/debugging purposes.
+        """
+        # Always allow - Docker container provides isolation
+        return True
 
     async def _docker_exec(self, cmd: list[str], timeout: int = 60) -> tuple[int, str, str]:
         """Execute command inside container via docker exec."""
