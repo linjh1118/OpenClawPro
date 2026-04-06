@@ -1251,20 +1251,45 @@ class HarborNanoBotAgent(NanoBotAgent):
         super().__init__(**kwargs)
 
     def _register_tools(self) -> None:
-        """Register tools with DockerExecTool for command execution in container."""
-        from nanobot.agent.tools.filesystem import ReadFileTool, WriteFileTool, ListDirTool, EditFileTool
+        """Register tools with DockerExecTool for command execution in container.
 
-        # Register filesystem tools (work on host workspace, visible in container)
-        self._tools.register(ReadFileTool(workspace=self.workspace, allowed_dir=self.workspace))
-        self._tools.register(WriteFileTool(workspace=self.workspace, allowed_dir=self.workspace))
-        self._tools.register(ListDirTool(workspace=self.workspace, allowed_dir=self.workspace))
-        self._tools.register(EditFileTool(workspace=self.workspace, allowed_dir=self.workspace))
+        In Harbor architecture, all file operations happen inside the container
+        via docker exec, giving the agent a consistent view of the filesystem.
+        """
+        from nanobot.agent.tools.docker_filesystem import (
+            DockerReadFileTool,
+            DockerWriteFileTool,
+            DockerListDirTool,
+            DockerEditFileTool,
+        )
+
+        # Register Docker filesystem tools (execute inside container via docker exec)
+        self._tools.register(DockerReadFileTool(
+            container_name=self.container_name,
+            mount_point=self.mount_point,
+            allowed_dir=self.mount_point,
+        ))
+        self._tools.register(DockerWriteFileTool(
+            container_name=self.container_name,
+            mount_point=self.mount_point,
+            allowed_dir=self.mount_point,
+        ))
+        self._tools.register(DockerListDirTool(
+            container_name=self.container_name,
+            mount_point=self.mount_point,
+            allowed_dir=self.mount_point,
+        ))
+        self._tools.register(DockerEditFileTool(
+            container_name=self.container_name,
+            mount_point=self.mount_point,
+            allowed_dir=self.mount_point,
+        ))
 
         # Register shell tool that executes inside container
         self._tools.register(DockerExecTool(
             container_name=self.container_name,
             mount_point=self.mount_point,
-            working_dir=str(self.workspace),
+            working_dir=self.mount_point,
             restrict_to_workspace=True,
             disable_safety_guard=self.kwargs.get("disable_safety_guard", False),
         ))
