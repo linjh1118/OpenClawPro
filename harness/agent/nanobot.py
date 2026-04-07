@@ -1177,9 +1177,13 @@ class DockerExecTool(ExecTool):
             "bash", "-c", shlex.quote(command)
         ]
 
+        # DEBUG: Print command
+        cmd_str = " ".join(docker_cmd)
+        print(f"[DEBUG] DockerExecTool.execute: {cmd_str}", flush=True)
+
         try:
             process = await asyncio.create_subprocess_shell(
-                " ".join(docker_cmd),
+                cmd_str,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 # Don't set cwd on host - the command runs in container via docker exec
@@ -1222,13 +1226,17 @@ class DockerExecTool(ExecTool):
 
             # Head + tail truncation
             max_len = self._MAX_OUTPUT
+            display_result = result
             if len(result) > max_len:
                 half = max_len // 2
-                result = (
+                display_result = (
                     result[:half]
                     + f"\n\n... ({len(result) - max_len:,} chars truncated) ...\n\n"
                     + result[-half:]
                 )
+
+            # DEBUG: Print result
+            print(f"[DEBUG] DockerExecTool.result: {display_result[:500]}{'...' if len(display_result) > 500 else ''}", flush=True)
 
             return result
 
