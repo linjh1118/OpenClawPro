@@ -713,7 +713,7 @@ class NanoBotAgent(BaseAgent):
                 response = await self._call_llm(messages, tools=tool_defs, max_tokens=max_output_tokens)
             except Exception as e:
                 self._logger.error(f"[_run_loop] _call_llm exception: {type(e).__name__}: {e}")
-                return f"Error: {e}"
+                raise  # Re-raise to let execute() handle status correctly
 
             # 获取响应内容
             content = ""
@@ -1168,16 +1168,18 @@ class DockerExecTool(ExecTool):
 
         # Build docker exec command
         # Use bash -c to run the command, with -w to set working directory
+        # IMPORTANT: command must be properly quoted for bash -c
+        import shlex
         docker_cmd = [
             "docker", "exec",
             "-w", container_cwd,
             self.container_name,
-            "bash", "-c", command
+            "bash", "-c", shlex.quote(command)
         ]
 
         try:
             process = await asyncio.create_subprocess_shell(
-                " ".join(docker_cmd),  # Use shell to handle the command properly
+                " ".join(docker_cmd),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 # Don't set cwd on host - the command runs in container via docker exec
