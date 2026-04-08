@@ -100,6 +100,16 @@ class NanoBotAgent(BaseAgent):
         self._skills_summary: Optional[str] = None
         self._load_workspace_skills(workspace)
 
+        # 打印初始化信息（API Key 脱敏）
+        api_key_masked = (self.api_key[:4] + "****" + self.api_key[-4:]) if self.api_key and len(self.api_key) > 8 else "****"
+        self._logger.info("🤖 =================== NanoBotAgent Initialized ===================")
+        self._logger.info("  Model: %s", self.model)
+        self._logger.info("  API URL: %s", self.api_url)
+        self._logger.info("  API Key: %s", api_key_masked)
+        self._logger.info("  Workspace: %s", self.workspace)
+        self._logger.info("  Timeout: %ds", self.timeout)
+        self._logger.info("=================================================================")
+
     @property
     def _transcript(self) -> List[Dict]:
         """Thread-local transcript storage."""
@@ -364,6 +374,19 @@ class NanoBotAgent(BaseAgent):
             is_openrouter = self.api_url and "openrouter" in self.api_url.lower()
             is_azure_proxy = self.api_url and "azure" in self.api_url.lower()
             is_anthropic_compat = self.api_url and "anthropic" in self.api_url.lower()
+
+            # 打印 LLM 调用信息（API Key 脱敏）
+            api_key_masked = (self.api_key[:4] + "****" + self.api_key[-4:]) if self.api_key and len(self.api_key) > 8 else "****"
+            self._logger.info("📞 ==================== LLM Call ====================")
+            self._logger.info("  Requested Model: %s", requested_model)
+            self._logger.info("  API URL: %s", self.api_url)
+            self._logger.info("  API Key: %s", api_key_masked)
+            self._logger.info("  Max Tokens: %d", max_tokens)
+            self._logger.info("  Tools: %s", len(tools) if tools else 0)
+            self._logger.info("  Is OpenRouter: %s", is_openrouter)
+            self._logger.info("  Is Azure Proxy: %s", is_azure_proxy)
+            self._logger.info("  Is Anthropic Compat: %s", is_anthropic_compat)
+            self._logger.info("===================================================")
 
             if is_openrouter:
                 if not requested_model.startswith("openrouter/"):
