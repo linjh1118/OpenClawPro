@@ -1263,7 +1263,27 @@ class HarborNanoBotAgent(NanoBotAgent):
     ):
         self.container_name = container_name
         self.mount_point = mount_point
+        # Store workspace path for later mapping
+        self._host_workspace = kwargs.get("workspace")
         super().__init__(**kwargs)
+
+    def _load_workspace_skills(self, workspace: Path) -> None:
+        """Load skills and map location paths to container paths.
+
+        In Harbor architecture, SkillsLoader reads from host workspace but
+        agent's read_file operates inside container. We need to replace
+        host paths with container paths in the skills summary.
+        """
+        super()._load_workspace_skills(workspace)
+
+        # Map host workspace path to container mount_point in skills summary
+        if self._skills_summary and self._host_workspace:
+            host_path = str(self._host_workspace)
+            # Replace host path with container mount_point in <location> tags
+            self._skills_summary = self._skills_summary.replace(
+                f"<location>{host_path}",
+                f"<location>{self.mount_point}"
+            )
 
     def _register_tools(self) -> None:
         """Register tools with DockerExecTool for command execution in container.
