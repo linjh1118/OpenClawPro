@@ -43,9 +43,10 @@ class _FsTool(Tool):
         workspace: Path | None = None,
         allowed_dir: Path | None = None,
         extra_allowed_dirs: list[Path] | None = None,
+        disable_safety_guard: bool = False,
     ):
         self._workspace = workspace
-        self._allowed_dir = allowed_dir
+        self._allowed_dir = allowed_dir if not disable_safety_guard else None
         self._extra_allowed_dirs = extra_allowed_dirs
 
     def _resolve(self, path: str) -> Path:

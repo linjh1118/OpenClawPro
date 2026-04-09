@@ -188,11 +188,12 @@ class NanoBotAgent(BaseAgent):
 
     def _register_tools(self) -> None:
         """注册工具"""
+        disable = self.kwargs.get("disable_safety_guard", False)
         # 注册文件系统工具
-        self._tools.register(ReadFileTool(workspace=self.workspace, allowed_dir=self.workspace))
-        self._tools.register(WriteFileTool(workspace=self.workspace, allowed_dir=self.workspace))
-        self._tools.register(ListDirTool(workspace=self.workspace, allowed_dir=self.workspace))
-        self._tools.register(EditFileTool(workspace=self.workspace, allowed_dir=self.workspace))
+        self._tools.register(ReadFileTool(workspace=self.workspace, allowed_dir=self.workspace, disable_safety_guard=disable))
+        self._tools.register(WriteFileTool(workspace=self.workspace, allowed_dir=self.workspace, disable_safety_guard=disable))
+        self._tools.register(ListDirTool(workspace=self.workspace, allowed_dir=self.workspace, disable_safety_guard=disable))
+        self._tools.register(EditFileTool(workspace=self.workspace, allowed_dir=self.workspace, disable_safety_guard=disable))
 
         # 注册 shell 工具
         self._tools.register(ExecTool(
@@ -627,7 +628,7 @@ class NanoBotAgent(BaseAgent):
         ]
         messages.append(self._build_plan_system_message(plan, revision=bool(revision_reason)))
 
-    async def _run_loop(self, messages: List[Dict], max_iterations: int = 50, max_output_tokens: int = 8192) -> str:
+    async def _run_loop(self, messages: List[Dict], max_iterations: int = 50, max_output_tokens: int = 65536) -> str:
         """运行 agent loop"""
         tool_defs = self._tools.get_definitions()
         iteration = 0
@@ -1006,7 +1007,7 @@ class NanoBotAgent(BaseAgent):
 
             # 使用 asyncio 运行
             max_iters = kwargs.get("max_iterations", 50)
-            max_output_tokens = kwargs.get("max_output_tokens", 8192)
+            max_output_tokens = kwargs.get("max_output_tokens", 65536)
             content = asyncio.run(self._run_loop(messages, max_iterations=max_iters, max_output_tokens=max_output_tokens))
             self._logger.debug(f"[execute] _run_loop returned, content length: {len(content) if content else 0}, transcript entries: {len(self._transcript)}")
             self._save_session_messages(session_id, messages)
