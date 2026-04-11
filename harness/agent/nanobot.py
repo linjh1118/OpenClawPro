@@ -405,7 +405,6 @@ class NanoBotAgent(BaseAgent):
             # Azure proxy requires AzureOpenAI client
             if is_azure_proxy:
                 from openai import AzureOpenAI
-                import asyncio
 
                 # 转换 messages 格式
                 def convert_msg(msg):
@@ -501,18 +500,31 @@ class NanoBotAgent(BaseAgent):
             if tools:
                 kwargs["tools"] = tools
 
-            response = await acompletion(**kwargs)
-            self._logger.debug(f"[_call_llm] response received, choices: {len(response.choices) if hasattr(response, 'choices') else 0}")
+            # Retry on server errors (520, 500, InternalServerError)
+            max_retries = 3
+            for attempt in range(max_retries + 1):
+                try:
+                    response = await acompletion(**kwargs)
+                    self._logger.debug(f"[_call_llm] response received, choices: {len(response.choices) if hasattr(response, 'choices') else 0}")
 
-            # 提取 usage
-            if hasattr(response, "usage") and response.usage:
-                self._usage = {
-                    "input_tokens": getattr(response.usage, "prompt_tokens", 0),
-                    "output_tokens": getattr(response.usage, "completion_tokens", 0),
-                    "total_tokens": getattr(response.usage, "total_tokens", 0),
-                }
+                    # 提取 usage
+                    if hasattr(response, "usage") and response.usage:
+                        self._usage = {
+                            "input_tokens": getattr(response.usage, "prompt_tokens", 0),
+                            "output_tokens": getattr(response.usage, "completion_tokens", 0),
+                            "total_tokens": getattr(response.usage, "total_tokens", 0),
+                        }
 
-            return response
+                    return response
+                except Exception as retry_e:
+                    err_str = str(retry_e).lower()
+                    is_server_error = any(kw in err_str for kw in ["520", "500", "internalservererror", "api_error"])
+                    if is_server_error and attempt < max_retries:
+                        delay = 5 * (2 ** attempt)
+                        self._logger.warning(f"[_call_llm] Server error (attempt {attempt+1}/{max_retries+1}), retrying in {delay}s: {retry_e}")
+                        await asyncio.sleep(delay)
+                        continue
+                    raise retry_e
 
         except Exception as e:
             raise Exception(f"LLM call failed: {e}")
@@ -628,7 +640,7 @@ class NanoBotAgent(BaseAgent):
         ]
         messages.append(self._build_plan_system_message(plan, revision=bool(revision_reason)))
 
-    async def _run_loop(self, messages: List[Dict], max_iterations: int = 50, max_output_tokens: int = 65536) -> str:
+    async def _run_loop(self, messages: List[Dict], max_iterations: int = 50, max_output_tokens: int = 16384) -> str:
         """运行 agent loop"""
         tool_defs = self._tools.get_definitions()
         iteration = 0
@@ -1007,7 +1019,7 @@ class NanoBotAgent(BaseAgent):
 
             # 使用 asyncio 运行
             max_iters = kwargs.get("max_iterations", 50)
-            max_output_tokens = kwargs.get("max_output_tokens", 65536)
+            max_output_tokens = kwargs.get("max_output_tokens", 16384)
             content = asyncio.run(self._run_loop(messages, max_iterations=max_iters, max_output_tokens=max_output_tokens))
             self._logger.debug(f"[execute] _run_loop returned, content length: {len(content) if content else 0}, transcript entries: {len(self._transcript)}")
             self._save_session_messages(session_id, messages)
