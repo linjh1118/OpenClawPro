@@ -1,0 +1,48 @@
+# T4a: Program Support Card - Code Debugging Workflow
+# Domain: software
+# Paper reference: T4a - Program Support Cards for skill availability
+
+- name: code_debug_workflow
+  description: Systematic debugging of code issues using structured approach
+  domain: software
+  program_goal: Identify, localize, and fix bugs in code using a systematic debugging methodology.
+  prerequisites:
+    - Ensure the code is runnable in the current environment
+    - Gather the full error traceback or unexpected output
+    - Identify the expected vs actual behavior
+  steps:
+    - Step 1: Reproduce the bug with minimal input to isolate the failure point
+    - Step 2: Read the error traceback and identify the exact line where failure occurs
+    - Step 3: Check all inputs and state at the failure point (print debugging or logging)
+    - Step 4: Formulate a hypothesis about the root cause
+    - Step 5: Fix the identified issue; prefer minimal changes
+    - Step 6: Verify the fix with the original failing input
+    - Step 7: Run regression tests to ensure no new bugs were introduced
+    - Step 8: Add a unit test for this edge case if none exists
+  common_pitfalls:
+    - "Fixing symptoms instead of root cause: A bug fixed at the wrong level will recur"
+    - "Not running existing tests before making changes: Always establish a baseline"
+    - "Making too many changes at once: Fix one issue, test, then proceed"
+    - "Ignoring the error message: Error messages contain specific clues about the failure"
+
+- name: git_code_review
+  description: Conduct a thorough code review using a structured checklist
+  domain: software
+  program_goal: Review code changes systematically to identify bugs, style issues, and improvement opportunities.
+  prerequisites:
+    - Obtain the diff or pull request URL
+    - Understand the context and purpose of the change
+  steps:
+    - Step 1: Read the PR description and linked issues for context
+    - "Step 2: Review the overall architecture — does this change fit the existing design?"
+    - Step 3: Check each changed file for logic correctness
+    - Step 4: Verify edge cases are handled (null inputs, empty lists, boundary values)
+    - Step 5: Check for security issues (input validation, SQL injection, exposed secrets)
+    - Step 6: Verify tests cover the new functionality with reasonable coverage
+    - Step 7: Check that documentation is updated if behavior changed
+    - Step 8: Leave constructive comments with specific suggestions
+  common_pitfalls:
+    - "Reviewing style over substance: Focus on correctness before formatting"
+    - "Not checking the tests: Tests are the safety net; missing tests are a red flag"
+    - "Approving code with unresolved comments: Ensure all comments are addressed before merge"
+    - "Missing security review: Always check for OWASP Top 10 issues in relevant code"

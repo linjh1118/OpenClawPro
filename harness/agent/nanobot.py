@@ -348,7 +348,11 @@ class NanoBotAgent(BaseAgent):
         self._logger.info(f"Collaboration modules initialized: mode={config.mode}, max_handoffs={config.max_handoffs}")
 
     def _init_procedural_modules(self) -> None:
-        """初始化 procedural 模块 (T4)"""
+        """初始化 procedural 模块 (T4)
+
+        T4a: Program Support Cards via dense retrieval
+        T4b: Skill Activation Prompts
+        """
         config = self._procedural_config
         if not config.enabled:
             self._procedural_store = None
@@ -360,7 +364,17 @@ class NanoBotAgent(BaseAgent):
         self._procedural_trigger = ProceduralTrigger(config, self._procedural_store)
         self._procedural_expander = ProceduralExpander()
 
-        self._logger.info(f"Procedural modules initialized: cards_dir={config.cards_dir}, card_count={self._procedural_store.get_card_count()}")
+        ps_cfg = config.program_support
+        sa_cfg = config.skill_activation
+        cards_dir = ps_cfg.cards_dir or config.cards_dir
+
+        self._logger.info(
+            f"[T4] Procedural modules initialized: "
+            f"T4a_program_support={ps_cfg.enabled}, "
+            f"T4b_skill_activation={sa_cfg.enabled}, "
+            f"cards_dir={cards_dir}, "
+            f"card_count={self._procedural_store.get_card_count()}"
+        )
 
     async def _call_llm(
         self,
@@ -518,7 +532,7 @@ class NanoBotAgent(BaseAgent):
                     return response
                 except Exception as retry_e:
                     err_str = str(retry_e).lower()
-                    is_server_error = any(kw in err_str for kw in ["520", "500", "internalservererror", "api_error"])
+                    is_server_error = any(kw in err_str for kw in ["520", "500", "529", "overloaded", "internalservererror", "api_error"])
                     if is_server_error and attempt < max_retries:
                         delay = 5 * (2 ** attempt)
                         self._logger.warning(f"[_call_llm] Server error (attempt {attempt+1}/{max_retries+1}), retrying in {delay}s: {retry_e}")
@@ -640,6 +654,30 @@ class NanoBotAgent(BaseAgent):
         ]
         messages.append(self._build_plan_system_message(plan, revision=bool(revision_reason)))
 
+    def _extract_domain_from_task(self, task: str) -> str | None:
+        """Extract domain from task description for card filtering.
+
+        T4a: Program support cards are grouped by domain. This method
+        tries to detect the domain from task keywords.
+
+        Args:
+            task: The task description
+
+        Returns:
+            Domain name if detected, None otherwise
+        """
+        domain_keywords = {
+            "medical": ["pubmed", "clinical", "rct", "randomized", "biomedical", "medical", "healthcare"],
+            "software": ["code", "debug", "refactor", "test", "deploy", "repository", "github"],
+            "research": ["paper", "survey", "literature", "arxiv", "citation", "reference"],
+            "data": ["dataset", "analysis", "visualization", "csv", "database", "query"],
+        }
+        task_lower = task.lower()
+        for domain, keywords in domain_keywords.items():
+            if any(kw in task_lower for kw in keywords):
+                return domain
+        return None
+
     async def _run_loop(self, messages: List[Dict], max_iterations: int = 50, max_output_tokens: int = 16384) -> str:
         """运行 agent loop"""
         tool_defs = self._tools.get_definitions()
@@ -709,33 +747,66 @@ class NanoBotAgent(BaseAgent):
                     else:
                         messages.insert(0, memory_msg)
 
-            # T4: Procedural - 检查触发并注入 procedure context
+            # T4a: Program Support Cards - inject via dense retrieval at task start
             if self._procedural_config.enabled and self._procedural_trigger:
                 self._procedural_trigger.increment_iteration()
-                # Build context from recent messages
-                context_for_trigger = ""
-                for msg in messages[-5:]:  # Last 5 messages as context
-                    if msg.get("role") == "user":
-                        context_for_trigger = msg.get("content", "")[:200]
-                        break
+                domain = self._extract_domain_from_task(current_task)
 
-                triggered = self._procedural_trigger.check(current_task, context=context_for_trigger)
-                if triggered:
-                    cards = [card for card, _ in triggered]
-                    # Update executor role tool defs for T3
-                    if self._executor_role:
-                        self._executor_role.set_tool_definitions(tool_defs)
-                    # Format and inject
-                    procedure_context = self._procedural_expander.format_multiple(cards)
-                    # Insert after memory context if present, else after system
-                    procedure_msg = {"role": "system", "content": procedure_context}
-                    # Find insertion point (after memory msg if exists)
-                    insert_idx = 1  # Default after system
+                # T4b: Skill Activation Prompt - inject at task start (iteration 1)
+                if (
+                    iteration == 1
+                    and self._procedural_config.skill_activation.enabled
+                    and self._procedural_config.skill_activation.inject_at_start
+                ):
+                    skill_act_prompt = self._procedural_expander.format_skill_activation(
+                        self._procedural_config.skill_activation,
+                        tool_definitions=tool_defs,
+                    )
+                    skill_act_msg = {"role": "system", "content": skill_act_prompt}
+                    # Find insertion point: after system, before memory
+                    insert_idx = 1
                     for i, msg in enumerate(messages):
                         if msg.get("role") == "system" and "memory" in msg.get("content", "").lower():
-                            insert_idx = i + 1
+                            insert_idx = i
                             break
-                    messages.insert(insert_idx, procedure_msg)
+                    messages.insert(insert_idx, skill_act_msg)
+                    self._logger.info("[T4b] Skill activation prompt injected at task start")
+
+                # T4a: Retrieve program support cards via dense retrieval
+                if self._procedural_config.program_support.enabled:
+                    # Build context from recent messages
+                    context_for_trigger = ""
+                    for msg in reversed(messages[-10:]):
+                        if msg.get("role") == "user":
+                            context_for_trigger = msg.get("content", "")[:300]
+                            break
+
+                    # Dense retrieval (BERT bi-encoder) → top-k cards
+                    retrieved = self._procedural_trigger.retrieve_cards(
+                        current_task,
+                        context=context_for_trigger,
+                        domain=domain,
+                    )
+                    if retrieved:
+                        cards = [card for card, score, _ in retrieved]
+                        top_score = retrieved[0][1] if retrieved else 0.0
+                        self._logger.info(
+                            f"[T4a] Retrieved {len(cards)} program support cards "
+                            f"(top score: {top_score:.4f})"
+                        )
+                        # Format and inject
+                        procedure_context = self._procedural_expander.format_multiple(cards)
+                        procedure_msg = {"role": "system", "content": procedure_context}
+                        # Find insertion point: after skill activation prompt if present
+                        insert_idx = 1
+                        for i, msg in enumerate(messages):
+                            if msg.get("role") == "system" and "Skill Activation" in msg.get("content", ""):
+                                insert_idx = i + 1
+                                break
+                            if msg.get("role") == "system" and "memory" in msg.get("content", "").lower():
+                                insert_idx = i + 1
+                                break
+                        messages.insert(insert_idx, procedure_msg)
 
             # T3: Collaboration - planner_executor uses planner for initial plan and bounded revisions.
             if self._collab_config.enabled and self._handoff_manager:
@@ -990,6 +1061,27 @@ class NanoBotAgent(BaseAgent):
                     "tool_call_id": tool_call["id"],
                     "content": tool_result,
                 })
+
+                # T4b: Check for unexpected tool results and re-trigger skill activation
+                if (
+                    self._procedural_config.enabled
+                    and self._procedural_config.skill_activation.enabled
+                    and self._procedural_trigger
+                ):
+                    should_retrigger = self._procedural_trigger.check_unexpected_result(
+                        tool_name,
+                        tool_result,
+                    )
+                    if should_retrigger and self._procedural_trigger.is_unexpected_triggered():
+                        retrigger_prompt = self._procedural_expander.format_skill_activation_retrigger(
+                            tool_name=tool_name,
+                            result_summary=str(tool_result)[:200],
+                        )
+                        retrigger_msg = {"role": "system", "content": retrigger_prompt}
+                        messages.append(retrigger_msg)
+                        self._logger.info(f"[T4b] Skill activation re-triggered: unexpected result from {tool_name}")
+                        # Clear the triggered flag so it doesn't re-fire on the same iteration
+                        self._procedural_trigger.clear_unexpected_triggered()
 
         return content if content else "Max iterations reached"
 

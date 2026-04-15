@@ -1,7 +1,8 @@
 """
 Procedural Store - Recipe T4: Procedural Support
 
-In-memory storage for skill/procedure cards.
+In-memory storage for skill/program support cards.
+Supports T4a: program support cards with domain grouping.
 """
 
 from __future__ import annotations
@@ -13,24 +14,30 @@ from typing import Dict, List, Optional
 
 import yaml
 
-from .config import ProceduralConfig, SkillCard
+from .config import ProceduralConfig, ProgramSupportConfig, SkillCard
 
 logger = logging.getLogger("agent.procedure.store")
 
 
 class ProceduralStore:
-    """In-memory store for skill cards.
+    """In-memory store for skill/program support cards.
 
-    Loads skill cards from YAML/JSON files and provides lookup by ID.
+    Loads cards from YAML/JSON files and provides lookup by ID.
+    Supports domain grouping for T4a program support cards.
     """
 
     def __init__(self, config: ProceduralConfig):
         self.config = config
         self._cards: Dict[str, SkillCard] = {}
-        self._trigger_index: Dict[str, List[str]] = {}  # keyword -> [skill_names]
+        self._domain_index: Dict[str, List[str]] = {}  # domain -> [card_names]
+        self._trigger_index: Dict[str, List[str]] = {}  # keyword_lower -> [card_names]
 
-        if config.enabled and config.cards_dir:
-            self._load_cards(config.cards_dir)
+        # Support both new nested config and legacy flat config
+        program_cfg = config.program_support
+        cards_dir = program_cfg.cards_dir or config.cards_dir
+
+        if config.enabled and cards_dir:
+            self._load_cards(cards_dir)
 
     def _load_cards(self, cards_dir: str) -> None:
         """Load skill cards from directory.
@@ -50,7 +57,7 @@ class ProceduralStore:
                 loaded_count += 1
 
         for file_path in cards_path.glob("*.json"):
-            if file_path.name.endswith(".skill.json"):  # Skip any non-skill JSON
+            if file_path.name.endswith(".skill.json"):
                 continue
             cards = self._load_from_file(file_path)
             for card in cards:
@@ -64,16 +71,14 @@ class ProceduralStore:
         try:
             content = file_path.read_text(encoding="utf-8")
 
-            if file_path.suffix == ".yaml" or file_path.suffix == ".yml":
+            if file_path.suffix in (".yaml", ".yml"):
                 data = yaml.safe_load(content)
             else:
                 data = json.loads(content)
 
             if isinstance(data, dict):
-                # Single card
                 return [SkillCard.from_dict(data)]
             elif isinstance(data, list):
-                # Multiple cards
                 return [SkillCard.from_dict(item) for item in data]
             else:
                 logger.warning(f"[ProceduralStore] Unknown format in {file_path}")
@@ -84,10 +89,17 @@ class ProceduralStore:
             return []
 
     def _add_card(self, card: SkillCard) -> None:
-        """Add a card to the store and update trigger index."""
+        """Add a card to the store and update indexes."""
         self._cards[card.name] = card
 
-        # Update trigger index
+        # Domain index
+        if card.domain:
+            if card.domain not in self._domain_index:
+                self._domain_index[card.domain] = []
+            if card.name not in self._domain_index[card.domain]:
+                self._domain_index[card.domain].append(card.name)
+
+        # Trigger keyword index (backward compatible)
         for keyword in card.trigger_keywords:
             keyword_lower = keyword.lower()
             if keyword_lower not in self._trigger_index:
@@ -102,6 +114,15 @@ class ProceduralStore:
     def get_all(self) -> List[SkillCard]:
         """Get all skill cards."""
         return list(self._cards.values())
+
+    def get_by_domain(self, domain: str) -> List[SkillCard]:
+        """Get all skill cards for a specific domain."""
+        card_names = self._domain_index.get(domain, [])
+        return [self._cards[name] for name in card_names if name in self._cards]
+
+    def get_all_domains(self) -> List[str]:
+        """Get list of all domains."""
+        return list(self._domain_index.keys())
 
     def get_compact_list(self) -> List[Dict[str, str]]:
         """Get compact list of all skills for display."""

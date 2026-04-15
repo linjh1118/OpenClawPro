@@ -19,6 +19,7 @@ class MemoryItem:
     created_at: float
     access_count: int = 0
     last_accessed_at: Optional[float] = None
+    trust: float = 0.5  # Trust score 0.0~1.0, default 0.5
 
     def touch(self, current_time: float) -> None:
         """Update access metadata."""
@@ -37,6 +38,7 @@ class MemoryItem:
             "created_at": self.created_at,
             "access_count": self.access_count,
             "last_accessed_at": self.last_accessed_at,
+            "trust": self.trust,
         }
 
     @classmethod

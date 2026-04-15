@@ -16,6 +16,8 @@ class MemoryConfig:
     write_policy: WritePolicy = field(default_factory=lambda: WritePolicy.TOOL_RESULT_OR_ERROR)
     retrieval_policy: RetrievalPolicy = field(default_factory=lambda: RetrievalPolicy.RECENT)
     long_content_threshold: int = 500  # Min content length for LONG_CONTENT write policy
+    decay_halflife_minutes: float = 60.0  # Time decay half-life in minutes
+    trust_exclude_threshold: float = 0.3  # Trust below this value excluded from retrieval
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -26,6 +28,8 @@ class MemoryConfig:
             "write_policy": self.write_policy.value,
             "retrieval_policy": self.retrieval_policy.value,
             "long_content_threshold": self.long_content_threshold,
+            "decay_halflife_minutes": self.decay_halflife_minutes,
+            "trust_exclude_threshold": self.trust_exclude_threshold,
         }
 
     @classmethod

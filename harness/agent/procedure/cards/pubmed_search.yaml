@@ -1,0 +1,44 @@
+# T4a: Program Support Card - PubMed RCT Search
+# Domain: medical
+# Paper reference: T4a - Program Support Cards for skill availability
+
+- name: pubmed_rct_search
+  description: Conduct a PubMed search for randomized controlled trials (RCTs)
+  domain: medical
+  program_goal: Find peer-reviewed randomized controlled trials on a given medical topic using PubMed's clinical query filters.
+  prerequisites:
+    - Ensure you have access to PubMed (https://pubmed.ncbi.nlm.nih.gov)
+    - Identify the PICO elements (Population, Intervention, Comparison, Outcome)
+    - Prepare a list of MeSH terms and keywords for the search
+  steps:
+    - Step 1: Navigate to PubMed advanced search builder
+    - Step 2: Build search query using MeSH terms combined with AND/OR/NOT operators
+    - Step 3: Apply "Randomized Controlled Trial" filter from Clinical Queries
+    - Step 4: Review the number of results; adjust query if >500 results
+    - Step 5: Export top results (abstract, title, authors) to a reference manager
+    - Step 6: Read abstracts and apply inclusion/exclusion criteria
+    - Step 7: Retrieve full-text articles for studies meeting criteria
+  common_pitfalls:
+    - "Using only free text terms without MeSH: Use MeSH vocabulary for better recall"
+    - "Forgetting to apply the RCT filter: Always use Clinical Queries RCT filter for evidence-based searches"
+    - "Overly broad query returning >500 results: Narrow by adding population-specific terms"
+    - "Not checking PROSPERO for existing systematic reviews: Always verify no duplicate review exists"
+
+- name: clinical_trial_analysis
+  description: Analyze and extract data from clinical trial protocols
+  domain: medical
+  program_goal: Extract key methodological details from clinical trial documents for systematic review synthesis.
+  prerequisites:
+    - Obtain trial registration number (ClinicalTrials.gov, EU-CTR, or ISRCTN)
+    - Ensure access to trial protocol or published article
+  steps:
+    - Step 1: Locate the trial via registration number in ClinicalTrials.gov or WHO ICTRP
+    - Step 2: Extract study design, sample size, inclusion/exclusion criteria
+    - Step 3: Note primary and secondary outcomes and measurement instruments
+    - Step 4: Record intervention details, dosage, and duration
+    - Step 5: Extract statistical analysis plan and sample size justification
+    - Step 6: Compare protocol vs published results if discrepancies exist
+  common_pitfalls:
+    - "Using only the published article without the protocol: Protocol provides pre-specified analyses not subject to publication bias"
+    - "Confusing primary and secondary outcomes: Always prioritize primary outcomes for synthesis"
+    - "Not checking for trial registration: Unregistered trials have higher risk of selective reporting"

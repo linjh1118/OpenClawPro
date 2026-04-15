@@ -84,7 +84,7 @@ class EpisodicMemoryStore:
             max_items: Maximum items to retrieve (default from config)
 
         Returns:
-            List of retrieved MemoryItems
+            List of retrieved MemoryItems sorted by final_score
         """
         if not self._enabled or not self._items:
             return []
@@ -92,13 +92,22 @@ class EpisodicMemoryStore:
         if max_items is None:
             max_items = self.config.retrieval_max
 
-        # Sort by policy
-        items = self._sort_by_policy(self._items.copy())
-
-        # Touch accessed items
         current_time = time.time()
+
+        # Filter by trust threshold and calculate scores
+        scored_items = []
+        for item in self._items:
+            if item.trust < self.config.trust_exclude_threshold:
+                continue
+            score = self.score_item(item, current_time)
+            scored_items.append((item, score))
+
+        # Sort by score descending
+        scored_items.sort(key=lambda x: x[1], reverse=True)
+
+        # Touch accessed items and return top items
         retrieved = []
-        for item in items[:max_items]:
+        for item, _ in scored_items[:max_items]:
             item.touch(current_time)
             retrieved.append(item)
 
@@ -121,6 +130,51 @@ class EpisodicMemoryStore:
                 reverse=True,
             )
         return items
+
+    def score_item(self, item: MemoryItem, current_time: float) -> float:
+        """Calculate retrieval score for an item.
+
+        Score = recency_score × trust_score × decay_score
+        - recency_score = 1 / (1 + age_minutes / half_life)  # linear decay
+        - trust_score = item.trust (0.0 ~ 1.0)
+        - decay_score = 0.5^(age_minutes / half_life)  # exponential decay
+        """
+        age_minutes = (current_time - item.created_at) / 60.0
+        half_life = self.config.decay_halflife_minutes
+
+        # Linear recency score (0 to 1)
+        recency_score = 1.0 / (1.0 + age_minutes / half_life)
+
+        # Trust score (0.0 to 1.0)
+        trust_score = item.trust
+
+        # Exponential decay score (0 to 1)
+        decay_score = 0.5 ** (age_minutes / half_life)
+
+        return recency_score * trust_score * decay_score
+
+    def update_trust(self, item_id: str, is_positive: bool) -> bool:
+        """Update trust score for an item.
+
+        Args:
+            item_id: ID of the item to update
+            is_positive: True for positive feedback (+0.05), False for negative (-0.10)
+
+        Returns:
+            True if item was found and updated, False otherwise
+        """
+        for item in self._items:
+            if item.id == item_id:
+                if is_positive:
+                    item.trust = min(1.0, item.trust + 0.05)
+                else:
+                    item.trust = max(0.0, item.trust - 0.10)
+                self._logger.debug(
+                    f"[EpisodicMemoryStore] Updated trust for {item_id}: "
+                    f"{'positive' if is_positive else 'negative'} -> {item.trust:.3f}"
+                )
+                return True
+        return False
 
     def format_for_prompt(self, items: Optional[List[MemoryItem]] = None) -> str:
         """Format memory items as a string for injection into prompt.

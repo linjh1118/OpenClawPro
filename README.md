@@ -196,6 +196,37 @@ nanobot channels login whatsapp
 > [!TIP]
 > Set your API key in `~/.nanobot/config.json`.
 > Get API keys: [OpenRouter](https://openrouter.ai/keys) (Global)
+
+## 📥 ClawEval Fixtures Download
+
+When using **ClawEvalKit** (benchmark evaluation toolkit), some tasks require fixture files (especially video tasks).
+
+### Download Fixtures
+
+```bash
+# Install huggingface_hub if not already installed
+pip install huggingface_hub datasets
+
+# Download fixtures from HuggingFace
+python3 -c "
+from huggingface_hub import snapshot_download
+local_dir = snapshot_download(
+    repo_id='claw-eval/Claw-Eval',
+    repo_type='dataset',
+    allow_patterns=['data/fixtures.tar.gz']
+)
+print(f'Downloaded to: {local_dir}')
+"
+
+# Extract fixtures to the correct location
+cd /path/to/ClawEvalKit/benchmarks/claw-eval
+tar -xzf data/fixtures.tar.gz -C tasks/
+```
+
+> [!NOTE]
+> The fixtures archive (~2.7GB) includes video files for multimodal tasks.
+> Video files are not included in the GitHub repository due to size limits.
+> See: [claw-eval/Claw-Eval](https://huggingface.co/datasets/claw-eval/Claw-Eval)
 >
 > For other LLM providers, please see the [Providers](#providers) section.
 >

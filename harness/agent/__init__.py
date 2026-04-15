@@ -35,11 +35,16 @@ from .collaboration import (
 # Procedure - Recipe T4
 from .procedure import (
     ProceduralConfig,
+    ProgramSupportConfig,
+    RetrievalConfig,
+    SkillActivationConfig,
+    SkillActivationComponent,
     SkillCard,
     ProceduralEvent,
     ProceduralStore,
     ProceduralTrigger,
     ProceduralExpander,
+    DenseRetriever,
     get_procedure_summary,
 )
 
@@ -77,10 +82,15 @@ __all__ = [
     "get_collab_summary",
     # Procedure (T4)
     "ProceduralConfig",
+    "ProgramSupportConfig",
+    "RetrievalConfig",
+    "SkillActivationConfig",
+    "SkillActivationComponent",
     "SkillCard",
     "ProceduralEvent",
     "ProceduralStore",
     "ProceduralTrigger",
     "ProceduralExpander",
+    "DenseRetriever",
     "get_procedure_summary",
 ]
