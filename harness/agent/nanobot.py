@@ -141,6 +141,18 @@ class NanoBotAgent(BaseAgent):
             normalized["files"] = [normalized["path"]]
         return normalized
 
+    def _emit_control_event(self, event_type: str, event_data: dict) -> None:
+        """Emit a control event to the transcript (helper for callback-based modules).
+
+        This is used by RetryPolicy and other control modules to emit granular events.
+        """
+        if self._transcript is not None:
+            self._transcript.append({
+                "type": "control_event",
+                "event": event_type,
+                **event_data,
+            })
+
     def _load_session_messages(self, session_id: str | None) -> List[Dict[str, Any]]:
         if not session_id:
             return []
@@ -259,10 +271,17 @@ class NanoBotAgent(BaseAgent):
         )
 
     def _build_executor_system_prompt(self) -> str:
+        # 拼接主 system_prompt + executor 专属指引
+        main_prompt = self.system_prompt or ""
         return (
+            f"{main_prompt}\n\n"
+            "## Executor Role\n"
             "You are an executor agent. Execute the current step precisely using the available tools.\n\n"
             "Execution guidance:\n"
             f"{self._build_collab_platform_guidance()}"
+            f"- Your working directory is `{self.workspace}`. Use RELATIVE paths (e.g. `.`, `logs/`, `data.csv`) for files.\n"
+            f"- Never use paths outside {self.workspace}.\n"
+            f"- Skills are located at: {self.workspace}/skills/\n"
             "- Prefer `write_file` for creating new files, including nested paths such as `src/main.py`.\n"
             "- Use `list_dir` to verify directory structure and `read_file` to verify file contents.\n"
             "- Use `exec` only when shell execution is genuinely necessary.\n"
@@ -274,8 +293,14 @@ class NanoBotAgent(BaseAgent):
         """初始化 control 模块"""
         config = self._control_config
 
-        # PlanFirst
-        self._plan_first = PlanFirst(config.plan_first, self)
+        # PlanFirst - create LLM adapter for PlanFirst's expected signature
+        async def plan_first_llm_adapter(prompt: str, max_tokens: int, temperature: float) -> str:
+            """Adapter that converts PlanFirst's llm_fn signature to NanoBotAgent._call_llm."""
+            messages = [{"role": "user", "content": prompt}]
+            result = await self._call_llm(messages, max_tokens=max_tokens)
+            return result.get("content", "")
+
+        self._plan_first = PlanFirst(config.plan_first, plan_first_llm_adapter)
 
         # ReplanTrigger
         self._replan_trigger = ReplanTrigger(config.replan)
@@ -700,6 +725,14 @@ class NanoBotAgent(BaseAgent):
                         "event": "plan_first",
                         "plan": plan_context,
                     })
+            else:
+                # 简单任务跳过规划
+                self._transcript.append({
+                    "type": "control_event",
+                    "event": "plan_skipped",
+                    "reason": "simple_task",
+                    "task_preview": current_task[:100] if current_task else "",
+                })
 
         while iteration < max_iterations:
             iteration += 1
@@ -730,7 +763,8 @@ class NanoBotAgent(BaseAgent):
 
             # 检索 memory 并注入到 messages
             if self._memory_store.is_enabled:
-                memory_context = self._memory_store.format_for_prompt()
+                retrieved_items = self._memory_store.retrieve(query=current_task)
+                memory_context = self._memory_store.format_for_prompt(retrieved_items)
                 if memory_context:
                     # 在 system message 后插入 memory context
                     memory_msg = {
@@ -746,6 +780,17 @@ class NanoBotAgent(BaseAgent):
                         messages.insert(system_idx + 1, memory_msg)
                     else:
                         messages.insert(0, memory_msg)
+                    # 记录 memory retrieval 到 transcript（仅记录一次，每轮首条 assistant 消息前）
+                    if iteration == 1 or (retrieved_items and len(self._transcript) > 0 and self._transcript[-1].get("type") != "memory_event"):
+                        self._transcript.append({
+                            "type": "memory_event",
+                            "event": "memory_retrieval",
+                            "iteration": iteration,
+                            "retrieved_count": len(retrieved_items),
+                            "total_items": self._memory_store.item_count,
+                            "retrieval_policy": self._memory_store.config.retrieval_policy.value,
+                            "memory_context_preview": memory_context[:500],
+                        })
 
             # T4a: Program Support Cards - inject via dense retrieval at task start
             if self._procedural_config.enabled and self._procedural_trigger:
@@ -969,6 +1014,16 @@ class NanoBotAgent(BaseAgent):
 
                 is_error = self._is_tool_error(tool_result)
 
+                # Collaboration: record executor step execution
+                if self._collab_config.enabled and self._executor_role:
+                    self._executor_role.record_step_execution(
+                        step={"step": iteration, "description": f"Execute {tool_name}"},
+                        result=tool_result,
+                        tool_used=tool_name,
+                        error=(tool_result if is_error else None),
+                        iteration=iteration,
+                    )
+
                 # Control: 记录错误和重试信号
                 if is_error:
                     error_msg = tool_result
@@ -992,6 +1047,15 @@ class NanoBotAgent(BaseAgent):
                             messages,
                             iteration=iteration,
                             revision_reason=revision_reason,
+                        )
+
+                    # Collaboration: record verifier critique for failed execution
+                    if self._collab_config.enabled and self._verifier_role:
+                        self._verifier_role.record_critique(
+                            step={"step": iteration, "description": f"Execute {tool_name}"},
+                            verdict="FAIL",
+                            feedback=f"Tool execution failed: {error_msg}",
+                            iteration=iteration,
                         )
 
                     if self._failure_reflection.config.enabled:
@@ -1022,13 +1086,25 @@ class NanoBotAgent(BaseAgent):
                 # 写入 memory (根据 write policy)
                 event_type = "error" if is_error else "tool_result"
                 if self._memory_store.should_write_event(event_type, tool_result):
-                    self._memory_store.write(
+                    mem_item = self._memory_store.write(
                         content=tool_result,
                         source=event_type,
                         source_detail=tool_name,
                         memory_type="error" if is_error else "result",
                     )
                     self._logger.debug(f"[_run_loop] Wrote {event_type} to memory: {tool_name}")
+                    # 记录 memory write 到 transcript
+                    if mem_item and self._transcript:
+                        self._transcript.append({
+                            "type": "memory_event",
+                            "event": "memory_write",
+                            "tool_name": tool_name,
+                            "source": event_type,
+                            "memory_type": "error" if is_error else "result",
+                            "item_id": mem_item.id,
+                            "item_count": self._memory_store.item_count,
+                            "content_preview": (tool_result or "")[:200],
+                        })
 
                 # 添加 assistant 消息到 transcript（格式兼容 pinchbench grading）
                 # grading 代码期望: content = [{"type": "toolCall", "name": "...", "params": {...}}]
@@ -1083,6 +1159,9 @@ class NanoBotAgent(BaseAgent):
                         # Clear the triggered flag so it doesn't re-fire on the same iteration
                         self._procedural_trigger.clear_unexpected_triggered()
 
+            # Collaboration: flush any buffered role events to transcript
+            self._consume_role_events()
+
         return content if content else "Max iterations reached"
 
     def execute(self, prompt: str, session_id: str | None = None, workspace: Path | None = None, **kwargs) -> AgentResult:
@@ -1102,6 +1181,8 @@ class NanoBotAgent(BaseAgent):
             self._retry_policy.reset()
             self._preflight_check.clear_history()
             self._plan_first.clear()
+            # 设置 retry 事件回调以记录细粒度事件到 transcript
+            self._retry_policy.set_event_callback(self._emit_control_event)
 
         # 重置 collaboration 模块状态 (T3)
         if self._collab_config.enabled and self._handoff_manager:
@@ -1159,6 +1240,21 @@ class NanoBotAgent(BaseAgent):
                 }
             })
 
+            # 记录 memory 初始化事件
+            if self._memory_store.is_enabled:
+                self._transcript.append({
+                    "type": "memory_event",
+                    "event": "memory_init",
+                    "config": {
+                        "enabled": self._memory_store.config.enabled,
+                        "max_items": self._memory_store.config.max_items,
+                        "write_policy": self._memory_store.config.write_policy.value,
+                        "retrieval_policy": self._memory_store.config.retrieval_policy.value,
+                        "long_content_threshold": self._memory_store.config.long_content_threshold,
+                        "decay_halflife_minutes": self._memory_store.config.decay_halflife_minutes,
+                    },
+                })
+
             # 使用 asyncio 运行
             max_iters = kwargs.get("max_iterations", 50)
             max_output_tokens = kwargs.get("max_output_tokens", 16384)
@@ -1188,6 +1284,15 @@ class NanoBotAgent(BaseAgent):
         # 记录 memory summary 到 transcript
         if self._memory_store.is_enabled and self._transcript:
             memory_summary = self._memory_store.get_summary()
+            # 补充 config 详情
+            memory_summary["config"] = {
+                "max_items": self._memory_store.config.max_items,
+                "retrieval_max": self._memory_store.config.retrieval_max,
+                "write_policy": self._memory_store.config.write_policy.value,
+                "retrieval_policy": self._memory_store.config.retrieval_policy.value,
+                "long_content_threshold": self._memory_store.config.long_content_threshold,
+                "decay_halflife_minutes": self._memory_store.config.decay_halflife_minutes,
+            }
             self._transcript.append({
                 "type": "memory_event",
                 "event": "memory_summary",

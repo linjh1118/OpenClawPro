@@ -44,12 +44,39 @@ class RetryState:
     last_error_type: str | None = None
 
 
+@dataclass
+class RetryResult:
+    """重试结果（包含详细信息的增强返回类型）"""
+    success: bool
+    result: Any
+    total_attempts: int
+    final_error: str | None = None
+    final_error_type: str | None = None
+    attempts_detail: list[dict] = field(default_factory=list)
+    exhausted: bool = False
+
+
 class RetryPolicy:
     """重试策略模块"""
 
     def __init__(self, config: "RetryConfig"):
         self.config = config
         self._states: dict[str, RetryState] = {}
+        # 事件回调：用于向 transcript 发送细粒度事件
+        # 回调签名: Callable[[str, dict], None]  (event_type, event_data)
+        self._event_callback: Callable[[str, dict], None] | None = None
+
+    def set_event_callback(self, callback: Callable[[str, dict], None]) -> None:
+        """设置事件回调，用于记录细粒度 retry 事件到 transcript"""
+        self._event_callback = callback
+
+    def _emit_event(self, event_type: str, event_data: dict) -> None:
+        """发送事件到回调"""
+        if self._event_callback:
+            try:
+                self._event_callback(event_type, event_data)
+            except Exception as e:
+                logger.warning(f"Retry event callback failed: {e}")
 
     def should_retry(self, tool_name: str, error: str, error_type: str = "unknown") -> RetryDecision:
         """判断是否应该重试"""
@@ -147,26 +174,78 @@ class RetryPolicy:
         *args,
         **kwargs,
     ) -> tuple[bool, Any]:
-        """执行带重试的函数"""
+        retry_result = await self.execute_with_retry_extended(tool_name, func, *args, **kwargs)
+        return retry_result.success, retry_result.result
+
+    async def execute_with_retry_extended(
+        self,
+        tool_name: str,
+        func: Callable[..., Awaitable[Any]],
+        *args,
+        **kwargs,
+    ) -> RetryResult:
+        """执行带重试的函数（扩展模式，返回详细信息）"""
         if not self.config.enabled:
             result = await func(*args, **kwargs)
-            return True, result
+            return RetryResult(success=True, result=result, total_attempts=1)
 
+        attempts_detail = []
         last_error = None
         last_error_type = "unknown"
+
+        # 记录第一次尝试开始
+        self._emit_event("retry_start", {
+            "tool_name": tool_name,
+            "config": {
+                "max_retries": self.config.max_retries,
+                "backoff": self.config.backoff,
+                "base_delay": self.config.base_delay,
+            }
+        })
 
         while True:
             try:
                 result = await func(*args, **kwargs)
-                # 兼容工具层“返回错误字符串”而非抛异常的实现
+                # 兼容工具层"返回错误字符串"而非抛异常的实现
                 if isinstance(result, str) and result.startswith("Error:"):
                     last_error = result
                     last_error_type = self._classify_error(RuntimeError(result))
 
                     decision = self.should_retry(tool_name, last_error, last_error_type)
+
+                    # 记录尝试
+                    attempt_info = {
+                        "attempt_number": self._get_state(tool_name).total_attempts + 1,
+                        "error": last_error,
+                        "error_type": last_error_type,
+                        "should_retry": decision.should_retry,
+                        "delay": decision.delay,
+                        "reason": decision.reason,
+                    }
+                    attempts_detail.append(attempt_info)
+                    self._emit_event("retry_attempt", {
+                        "tool_name": tool_name,
+                        **attempt_info,
+                    })
+
                     if not decision.should_retry:
                         logger.warning(f"Retry exhausted for {tool_name}: {last_error}")
-                        return False, last_error
+                        self._emit_event("retry_exhausted", {
+                            "tool_name": tool_name,
+                            "total_attempts": len(attempts_detail),
+                            "final_error": last_error,
+                            "final_error_type": last_error_type,
+                            "attempts": attempts_detail,
+                        })
+                        return RetryResult(
+                            success=False,
+                            result=last_error,
+                            total_attempts=len(attempts_detail),
+                            final_error=last_error,
+                            final_error_type=last_error_type,
+                            attempts_detail=attempts_detail,
+                            exhausted=True,
+                        )
 
                     self._record_attempt(
                         tool_name,
@@ -176,11 +255,31 @@ class RetryPolicy:
                     )
                     if decision.delay > 0:
                         logger.info(f"Retrying {tool_name} in {decision.delay:.1f}s (attempt {decision.retry_count + 1})")
+                        self._emit_event("retry_wait", {
+                            "tool_name": tool_name,
+                            "delay": decision.delay,
+                            "next_attempt": decision.retry_count + 1,
+                        })
                         await asyncio.sleep(decision.delay)
                     continue
 
                 self._mark_success(tool_name)
-                return True, result
+                total_attempts = len(attempts_detail) if attempts_detail else 1
+
+                # 如果之前有失败但现在成功了，记录成功
+                if attempts_detail:
+                    self._emit_event("retry_success", {
+                        "tool_name": tool_name,
+                        "total_attempts": total_attempts,
+                        "attempts": attempts_detail,
+                    })
+
+                return RetryResult(
+                    success=True,
+                    result=result,
+                    total_attempts=total_attempts if attempts_detail else 1,
+                    attempts_detail=attempts_detail,
+                )
 
             except Exception as e:
                 last_error = str(e)
@@ -188,9 +287,39 @@ class RetryPolicy:
 
                 decision = self.should_retry(tool_name, last_error, last_error_type)
 
+                # 记录尝试
+                attempt_info = {
+                    "attempt_number": self._get_state(tool_name).total_attempts + 1,
+                    "error": last_error,
+                    "error_type": last_error_type,
+                    "should_retry": decision.should_retry,
+                    "delay": decision.delay,
+                    "reason": decision.reason,
+                }
+                attempts_detail.append(attempt_info)
+                self._emit_event("retry_attempt", {
+                    "tool_name": tool_name,
+                    **attempt_info,
+                })
+
                 if not decision.should_retry:
                     logger.warning(f"Retry exhausted for {tool_name}: {last_error}")
-                    return False, last_error
+                    self._emit_event("retry_exhausted", {
+                        "tool_name": tool_name,
+                        "total_attempts": len(attempts_detail),
+                        "final_error": last_error,
+                        "final_error_type": last_error_type,
+                        "attempts": attempts_detail,
+                    })
+                    return RetryResult(
+                        success=False,
+                        result=last_error,
+                        total_attempts=len(attempts_detail),
+                        final_error=last_error,
+                        final_error_type=last_error_type,
+                        attempts_detail=attempts_detail,
+                        exhausted=True,
+                    )
 
                 self._record_attempt(
                     tool_name,
@@ -202,6 +331,11 @@ class RetryPolicy:
                 # 执行延迟
                 if decision.delay > 0:
                     logger.info(f"Retrying {tool_name} in {decision.delay:.1f}s (attempt {decision.retry_count + 1})")
+                    self._emit_event("retry_wait", {
+                        "tool_name": tool_name,
+                        "delay": decision.delay,
+                        "next_attempt": decision.retry_count + 1,
+                    })
                     await asyncio.sleep(decision.delay)
 
     def _mark_success(self, tool_name: str) -> None:

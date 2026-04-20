@@ -13,8 +13,8 @@ class MemoryConfig:
     enabled: bool = False
     max_items: int = 20  # Maximum memory items to store
     retrieval_max: int = 5  # Maximum items to retrieve per LLM call
-    write_policy: WritePolicy = field(default_factory=lambda: WritePolicy.TOOL_RESULT_OR_ERROR)
-    retrieval_policy: RetrievalPolicy = field(default_factory=lambda: RetrievalPolicy.RECENT)
+    write_policy: WritePolicy = field(default_factory=lambda: WritePolicy.ALWAYS)
+    retrieval_policy: RetrievalPolicy = field(default_factory=lambda: RetrievalPolicy.HYBRID)
     long_content_threshold: int = 500  # Min content length for LONG_CONTENT write policy
     decay_halflife_minutes: float = 60.0  # Time decay half-life in minutes
     trust_exclude_threshold: float = 0.3  # Trust below this value excluded from retrieval

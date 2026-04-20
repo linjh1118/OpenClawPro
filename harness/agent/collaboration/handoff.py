@@ -245,3 +245,9 @@ class HandoffManager:
     def get_events(self) -> List[CollabEvent]:
         """Get all events recorded."""
         return self._events.copy()
+
+    def consume_events(self) -> List[CollabEvent]:
+        """Return and clear buffered events."""
+        events = self._events.copy()
+        self._events.clear()
+        return events

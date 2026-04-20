@@ -22,6 +22,7 @@ class RetrievalPolicy(Enum):
     RECENT = "recent"  # Most recent first (default)
     FREQUENCY = "frequency"  # Most accessed first
     HYBRID = "hybrid"  # Combination of recent and frequency
+    SEMANTIC = "semantic"  # Semantic similarity via embedding (requires query)
 
 
 def should_write_to_memory(
@@ -41,16 +42,19 @@ def should_write_to_memory(
     Returns:
         True if should write to memory
     """
-    if policy == WritePolicy.ALWAYS:
+    # Use policy.value comparisons to avoid enum class identity issues
+    # (policy may come from a different import path than WritePolicy enum members)
+    pv = policy.value
+    if pv == "always":
         return True
-    elif policy == WritePolicy.NEVER:
+    elif pv == "never":
         return False
-    elif policy == WritePolicy.TOOL_RESULT_OR_ERROR:
+    elif pv == "tool_result_or_error":
         return event_type in ("tool_result", "error")
-    elif policy == WritePolicy.TOOL_RESULT:
+    elif pv == "tool_result":
         return event_type == "tool_result"
-    elif policy == WritePolicy.ERROR:
+    elif pv == "error":
         return event_type == "error"
-    elif policy == WritePolicy.LONG_CONTENT:
+    elif pv == "long_content":
         return len(content) >= long_content_threshold
     return False

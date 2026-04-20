@@ -266,6 +266,32 @@ class ExecutorRole:
                 "error": str(e),
             }
 
+    def record_step_execution(
+        self,
+        step: Dict[str, str],
+        result: str,
+        tool_used: str | None,
+        error: str | None,
+        iteration: int = 0,
+    ) -> None:
+        """Append a step_executed event without calling LLM."""
+        step_num = step.get("step", "?")
+        data: Dict[str, Any] = {"step": step_num}
+        if tool_used is not None:
+            data["tool"] = tool_used
+            data["result"] = result[:200]
+        else:
+            data["content"] = result[:200]
+        if error:
+            data["error"] = error
+        event = CollabEvent(
+            event_type="step_executed",
+            role="executor",
+            iteration=iteration,
+            data=data,
+        )
+        self._events.append(event)
+
     def get_events(self) -> List[CollabEvent]:
         """Get all events recorded by this role."""
         return self._events.copy()
@@ -362,6 +388,26 @@ Respond with:
             "feedback": "Verification skipped due to error",
             "iteration": iteration,
         }
+
+    def record_critique(
+        self,
+        step: Dict[str, str],
+        verdict: str,
+        feedback: str,
+        iteration: int = 0,
+    ) -> None:
+        """Append a critique event without calling LLM."""
+        event = CollabEvent(
+            event_type="critique",
+            role="verifier",
+            iteration=iteration,
+            data={
+                "verdict": verdict,
+                "feedback": feedback[:300],
+                "step": step.get("step", "?"),
+            },
+        )
+        self._events.append(event)
 
     def get_events(self) -> List[CollabEvent]:
         """Get all events recorded by this role."""

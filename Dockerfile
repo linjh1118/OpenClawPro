@@ -18,12 +18,13 @@ WORKDIR /app
 COPY pyproject.toml README.md LICENSE ./
 RUN mkdir -p nanobot bridge && touch nanobot/__init__.py && \
     uv pip install --system --no-cache . && \
+    uv pip install --system --no-cache sentence-transformers rank-bm25 litellm && \
     rm -rf nanobot bridge
 
 # Copy the full source and install
 COPY nanobot/ nanobot/
 COPY bridge/ bridge/
-RUN uv pip install --system --no-cache .
+RUN uv pip install --system --no-cache . sentence-transformers rank-bm25 litellm
 
 # Build the WhatsApp bridge
 RUN git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
