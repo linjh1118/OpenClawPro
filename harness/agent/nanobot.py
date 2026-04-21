@@ -160,11 +160,14 @@ class NanoBotAgent(BaseAgent):
         session_file = self._session_file(session_id)
         if not session_file.exists():
             base_messages: List[Dict[str, Any]] = []
-            # 注入 skills summary 到 system prompt 之前
+            # 合并 skills summary 和 harness system_prompt 为一条 system message
+            parts = []
             if self._skills_summary:
-                base_messages.append({"role": "system", "content": self._skills_summary})
+                parts.append(self._skills_summary)
             if self.system_prompt:
-                base_messages.append({"role": "system", "content": self.system_prompt})
+                parts.append(self.system_prompt)
+            if parts:
+                base_messages.append({"role": "system", "content": "\n\n".join(parts)})
             return base_messages
 
         try:
