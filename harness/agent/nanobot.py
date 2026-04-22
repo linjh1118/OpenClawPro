@@ -1234,6 +1234,13 @@ class NanoBotAgent(BaseAgent):
             messages = self._load_session_messages(session_id)
             messages.append({"role": "user", "content": prompt})
 
+            # 记录 system message 到 transcript
+            if messages and messages[0].get("role") == "system":
+                self._transcript.append({
+                    "type": "message",
+                    "message": messages[0]
+                })
+
             # 记录 user message 到 transcript
             self._transcript.append({
                 "type": "message",
