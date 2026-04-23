@@ -1,0 +1,81 @@
+{
+  "nodes": [
+    {
+      "id": "weather",
+      "name": "weather",
+      "file_path": "weather/SKILL.md"
+    },
+    {
+      "id": "video-analysis",
+      "name": "video-analysis",
+      "file_path": "video-analysis/SKILL.md"
+    },
+    {
+      "id": "cron",
+      "name": "cron",
+      "file_path": "cron/SKILL.md"
+    },
+    {
+      "id": "memory",
+      "name": "memory",
+      "file_path": "memory/SKILL.md"
+    },
+    {
+      "id": "skill-creator",
+      "name": "skill-creator",
+      "file_path": "skill-creator/SKILL.md"
+    },
+    {
+      "id": "clawhub",
+      "name": "clawhub",
+      "file_path": "clawhub/SKILL.md"
+    },
+    {
+      "id": "summarize",
+      "name": "summarize",
+      "file_path": "summarize/SKILL.md"
+    },
+    {
+      "id": "github",
+      "name": "github",
+      "file_path": "github/SKILL.md"
+    },
+    {
+      "id": "tmux",
+      "name": "tmux",
+      "file_path": "tmux/SKILL.md"
+    }
+  ],
+  "edges": [
+    {
+      "from": "skill-creator",
+      "to": "memory",
+      "type": "depends_on"
+    },
+    {
+      "from": "skill-creator",
+      "to": "clawhub",
+      "type": "depends_on"
+    },
+    {
+      "from": "clawhub",
+      "to": "skill-creator",
+      "type": "depends_on"
+    },
+    {
+      "from": "video-analysis",
+      "to": "summarize",
+      "type": "depends_on"
+    },
+    {
+      "from": "cron",
+      "to": "github",
+      "type": "depends_on"
+    },
+    {
+      "from": "github",
+      "to": "cron",
+      "type": "depends_on"
+    }
+  ]
+}
