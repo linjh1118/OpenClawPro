@@ -1,0 +1,28 @@
+name: cross_session_memory
+description: Remember and apply rules and constraints across multiple turns — when a requirement, convention, or formatting rule is introduced in one turn, store it and apply it consistently in all subsequent turns; when asked to recall user preferences or stored information, read the designated memory files first and do not invent preferences that are not stored there
+trigger_keywords:
+  - "remember"
+  - "memory"
+  - "accumulate"
+  - "constraints"
+  - "earlier"
+  - "session"
+  - "persist"
+  - "recall"
+  - "previous"
+  - "rule"
+  - "formatting"
+  - "across turns"
+  - "user preference"
+  - "memory file"
+steps:
+  - "When a rule or constraint is introduced, write it down for future reference"
+  - "In subsequent turns, check your stored notes before generating output"
+  - "Apply all accumulated rules simultaneously — not just the most recent one"
+  - "When asked to recall user preferences, check the designated memory file(s) first — do not invent or hallucinate preferences that are not stored"
+  - "When asked to store a preference, write it to the designated memory file using the proper format"
+examples:
+  - "Correct: store rules when introduced → retrieve and apply all of them in later turns"
+  - "Correct: keep a memory file → consult it in each new session"
+  - "Correct: user asks to recall preference → read memory file first → respond with stored preference only"
+compact: "Store rules and constraints — read memory files before responding — never invent preferences not stored in memory"

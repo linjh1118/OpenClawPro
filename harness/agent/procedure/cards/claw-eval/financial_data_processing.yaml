@@ -1,0 +1,26 @@
+# T4a: Program Support Card - Financial Data Processing
+# Domain: finance
+# Paper reference: T4a - Program Support Cards for skill availability
+
+- name: financial_data_processing
+  description: Query, filter, and aggregate financial data from structured APIs with proper handling of monetary values and date ranges
+  domain: finance
+  program_goal: Accurately retrieve, filter, and aggregate financial records while preserving monetary precision and handling temporal boundaries correctly.
+  prerequisites:
+    - Understand the available financial API endpoints and their schemas
+    - Know the date range and filtering criteria for the target period
+    - Identify any currency or unit conventions used in the data
+  steps:
+    - Step 1: Query the financial data source with the appropriate date range and filtering parameters
+    - Step 2: Validate that the returned records fall within the expected time window (check for off-by-one boundary errors)
+    - Step 3: Filter to include only relevant transactions (exclude irrelevant categories, voided items, or already-reimbursed entries)
+    - Step 4: Convert monetary values to a consistent unit if multiple currencies or denominations are present
+    - Step 5: Aggregate totals using appropriate aggregation logic (sum for totals, count for item counts)
+    - Step 6: Cross-check computed totals against individual line items to verify arithmetic correctness
+    - Step 7: Format output with proper precision (no floating-point rounding errors in final monetary amounts)
+  common_pitfalls:
+    - "Off-by-one date boundaries: A query for 'February 2026' must handle edge cases like timezone boundaries."
+    - "Mixing data from different periods: Ensure all records belong to the correct billing or fiscal period."
+    - "Floating-point currency arithmetic: Use decimal precision for monetary calculations, not float."
+    - "Missing or voided transactions: Check for status fields that indicate entries to exclude."
+    - "Ignoring currency conversion rates: Multi-currency reports require proper conversion with rate timestamps."

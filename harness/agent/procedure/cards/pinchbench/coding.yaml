@@ -1,0 +1,22 @@
+name: coding_and_api_tasks
+description: Coding and API workflow tasks — write scripts, build data pipelines, create packages
+trigger_keywords:
+  - "python"
+  - "script"
+  - "api"
+  - "fetch"
+  - "pipeline"
+  - "workflow"
+  - "package"
+  - "http"
+  - "endpoint"
+steps:
+  - "Read any provided configuration files in the workspace before writing code"
+  - "Follow language-appropriate conventions: proper imports, error handling, and clean structure"
+  - "For API tasks: handle HTTP calls with proper error handling (network failures, invalid responses)"
+  - "Structure multi-step workflows into logical, independently testable steps"
+  - "Verify the code is syntactically correct before finishing"
+examples:
+  - "Correct: read config first → write code with proper error handling → verify it runs"
+  - "Correct: break a pipeline into read → process → write steps"
+compact: "Read config first, write clean code with error handling, verify it runs"

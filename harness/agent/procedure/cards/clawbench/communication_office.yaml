@@ -1,0 +1,44 @@
+name: clawbench_official_communication_office
+description: Communication, email, and calendar scheduling — format messages for multiple channels
+  (Slack, Telegram, email), parse email messages (RFC 2822, MIME format), create calendar meetings
+  with title, date, time, duration, participants, find free slots and set reminders, extract calendar
+  events from emails (email to calendar synthesis), create ICS calendar files (VEVENT with DTSTART,
+  DTEND, SUMMARY), remember and recall information across multiple steps (session memory and persistence)
+trigger_keywords:
+  - email
+  - calendar
+  - schedule
+  - meeting
+  - reminder
+  - workflow
+  - automation
+  - memory
+  - persistent
+  - second brain
+  - organize
+  - inbox
+  - send email
+  - communication
+  - template
+  - rfc 2822
+  - mime format
+  - ics file
+  - vevent
+  - dtstart
+  - dtend
+  - email header
+  - parse email
+steps:
+  - 'Step 1: Identify the task type: email drafting/parsing, calendar scheduling, workflow automation, or multi-session memory'
+  - 'Step 2: For email tasks: parse email files (MIME format or raw text), extract headers (From, To, Subject, Date, Body), draft responses'
+  - 'Step 3: For calendar tasks: generate ICS files with proper VEVENT format. Handle timezones correctly'
+  - 'Step 4: For memory/persistence tasks: create structured memory files (Markdown or JSON) that can be referenced in future sessions'
+  - 'Step 5: For workflow automation: identify the workflow steps, write a script or configuration that automates the process'
+  - 'Step 6: For ICS files: include all required fields (DTSTART, DTEND, SUMMARY, DESCRIPTION, ATTENDEE if applicable)'
+  - 'Step 7: Write outputs to the workspace directory as specified (email drafts, ICS files, workflow scripts, memory files)'
+  - 'Step 8: Verify: run ls workspace/ to confirm all expected files exist'
+examples:
+  - 'Correct: ICS with DTSTART:20260331T150000Z DTEND:20260331T160000Z SUMMARY:Meeting DESCRIPTION:Project sync'
+  - 'Correct: memory file: memory/session.md with sections for decisions, preferences, and action items'
+  - 'Wrong: write to /root/ email files instead of workspace/ — grading code cannot access /root/'
+compact: Generate ICS calendar files (VEVENT with DTSTART, DTEND, SUMMARY) — parse RFC 2822 email files — write structured memory files for session persistence

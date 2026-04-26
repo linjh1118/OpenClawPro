@@ -1,0 +1,25 @@
+# T4a: Program Support Card - Procurement Evaluation
+# Domain: procurement
+# Assessment dimension: numerical (35%) + content (30%)
+
+- name: procurement_evaluation
+  description: >
+    Vendor and procurement evaluation method: gather vendor proposals and data,
+    establish evaluation criteria, score vendors objectively,
+    generate comparative analysis with numerical evidence
+  domain: procurement
+  program_goal: Evaluate vendor proposals and recommend optimal choice based on multi-criteria analysis
+  prerequisites:
+    - Can retrieve transaction history and vendor data from finance service
+    - Can search knowledge base for vendor information and reviews
+    - Can establish fair evaluation criteria (cost, quality, delivery, etc.)
+  steps:
+    - "Step 1: Gather all relevant vendor data from available services"
+    - "Step 2: Establish evaluation criteria relevant to the procurement needs"
+    - "Step 3: Score each vendor against the criteria with numerical support"
+    - "Step 4: Generate a comparative analysis table"
+    - "Step 5: Provide recommendation with justification based on the analysis"
+  common_pitfalls:
+    - "Not establishing clear evaluation criteria: Criteria should match business requirements."
+    - "Making recommendations without numerical support: Always include cost, timeline data."
+    - "Ignoring trade-offs: Acknowledge pros and cons of each vendor objectively."

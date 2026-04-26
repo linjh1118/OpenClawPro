@@ -1,0 +1,20 @@
+name: multi_step_workflow
+description: Execute multi-step workflows — identify each stage, execute in order, produce all expected outputs
+trigger_keywords:
+  - "multi-step"
+  - "workflow"
+  - "pipeline"
+  - "sequential"
+  - "step by step"
+  - "action items"
+  - "checklist"
+steps:
+  - "Identify each stage from the task description"
+  - "Execute each stage in the appropriate order"
+  - "Each stage may produce intermediate results needed by the next stage"
+  - "Produce all expected outputs before finishing"
+  - "Use relative paths from /tmp/workspace — never prefix paths with tmp/workspace or repeat the workspace directory"
+examples:
+  - "Correct: identify each stage → execute in order → produce all expected outputs"
+  - "Correct: complete each stage in sequence"
+compact: "Identify each stage — execute in order — produce all expected outputs"

@@ -1,0 +1,26 @@
+# T4a: Program Support Card - User Agent Conversation
+# Domain: user_agent
+# Assessment dimension: clarification (15%) + trajectory (20%)
+
+- name: user_agent_conversation
+  description: >
+    User agent interaction method: understand simulated user persona,
+    actively identify missing information, ask targeted clarifying questions,
+    perform calculations with provided data, give personalized recommendations
+  domain: user_agent
+  program_goal: Guide conversation to gather complete information and provide personalized advice
+  prerequisites:
+    - Understand how to interpret user persona descriptions
+    - Can identify which critical information is missing from the user's request
+    - Can perform numerical calculations for personalized recommendations
+  steps:
+    - "Step 1: Understand the user's background and context from persona description"
+    - "Step 2: Identify what key information is missing or ambiguous"
+    - "Step 3: Ask ONE focused clarifying question at a time"
+    - "Step 4: Update your understanding based on user's response"
+    - "Step 5: Perform calculations or analysis with the collected data"
+    - "Step 6: Provide personalized recommendation with reasoning"
+  common_pitfalls:
+    - "Asking too many questions at once: Focus on the most critical missing information."
+    - "Dumping all persona details upfront: Let information emerge through conversation naturally."
+    - "Giving recommendations without sufficient data: Ensure all key parameters are collected."

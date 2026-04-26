@@ -1,0 +1,24 @@
+# T4a: Program Support Card - Multi-turn Clarification
+# Domain: consultation
+# Paper reference: T4a - Program Support Cards for skill availability
+
+- name: multi_turn_clarification
+  description: Systematically clarify ambiguous or incomplete user requests through progressive questioning
+  domain: consultation
+  program_goal: Gather sufficient and accurate information before providing solutions or advice.
+  prerequisites:
+    - Understand the domain context of the user's request
+    - Identify what information is missing or ambiguous
+    - Prepare targeted follow-up questions
+  steps:
+    - Step 1: Identify which critical parameters are missing or ambiguous in the initial request
+    - Step 2: Ask one focused question targeting the most important missing information
+    - Step 3: Incorporate the user's response; update the problem model
+    - Step 4: Repeat Step 1-2 until all key parameters needed for the task are obtained
+    - Step 5: Summarize the understood situation back to the user for confirmation
+    - Step 6: Proceed to task execution only after receiving explicit or implicit confirmation
+  common_pitfalls:
+    - "Asking too many questions at once: Users get overwhelmed. Ask one focused question per turn."
+    - "Assuming information not explicitly provided: Always confirm key assumptions with the user."
+    - "Skipping clarification and proceeding with incomplete info: Leads to incorrect or irrelevant solutions."
+    - "Asking technical questions the user cannot answer: Frame questions in the user's domain language."

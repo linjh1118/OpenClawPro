@@ -1,0 +1,22 @@
+name: code_modification
+description: Modify and refactor existing code — fix bugs, update logic, add functionality to existing files
+trigger_keywords:
+  - "modify"
+  - "change"
+  - "refactor"
+  - "fix"
+  - "add to"
+  - "edit"
+  - "update"
+  - "code"
+  - "function"
+  - "class"
+steps:
+  - "Read the surrounding code to understand its structure and dependencies before making changes"
+  - "Make the modification precisely — change only what is needed"
+  - "Verify the change is syntactically correct"
+  - "Run the code to confirm the change works as expected"
+examples:
+  - "Correct: read context → make targeted change → verify it works"
+  - "Correct: understand the existing structure before editing"
+compact: "Read code context first — apply targeted changes — verify correctness"

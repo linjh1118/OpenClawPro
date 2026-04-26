@@ -1,0 +1,29 @@
+# T4a: Program Support Card - Structured Data Retrieval
+# Domain: knowledge
+# Assessment dimension: completion (40%) + trajectory (20%) + content (40%)
+
+- name: structured_data_retrieval
+  description: >
+    Knowledge base and structured data retrieval method: explore storage schema,
+    search and query systematically, cross-validate from multiple sources,
+    extract complete and verified information
+  domain: knowledge
+  program_goal: Retrieve comprehensive and accurate information from knowledge bases and structured storage systems
+  prerequisites:
+    - Can identify and access knowledge base storage systems
+    - Can execute search and query operations
+    - Can verify retrieved information for completeness
+  steps:
+    - "Step 1: Explore the storage interface to understand available collections, schemas, or record types"
+    - "Step 2: Formulate targeted search queries based on the specific information needed"
+    - "Step 3: Execute searches and retrieve candidate records; do not assume the first result is complete"
+    - "Step 4: Cross-validate information across multiple sources or records when available"
+    - "Step 5: Verify the retrieved information is complete — check if all aspects of the query are addressed"
+    - "Step 6: If initial search yields incomplete results, try broader terms or related concepts"
+    - "Step 7: Present findings with source attribution; note any gaps or uncertainties"
+  common_pitfalls:
+    - "Accepting the first search result as complete: Always verify all aspects of the query are covered."
+    - "Not cross-referencing: Single-source information may be incomplete or outdated."
+    - "Missing partial matches: Records with partial keyword overlap may contain relevant details."
+    - "Ignoring schema exploration: Blind queries may miss relevant records due to field name mismatches."
+    - "Overwriting storage data: Retrieval is read-only; do not modify records unless explicitly required."

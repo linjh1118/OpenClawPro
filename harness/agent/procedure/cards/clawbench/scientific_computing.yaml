@@ -1,0 +1,47 @@
+name: clawbench_official_scientific_computing
+description: Scientific computing tasks — Lotka-Volterra predator-prey ODE, Runge-Kutta
+  RK4 numerical solver, physics simulations, FFT signal processing, numerical integration
+  for differential equations
+trigger_keywords:
+- scientific computing
+- ode
+- pde
+- runge-kutta
+- rk4
+- numerical solver
+- differential equation
+- predator-prey
+- lotka-volterra
+- physics
+- simulation
+- signal processing
+- fft
+- filter
+- waveform
+- dynamics
+- fem
+- numerical integration
+steps:
+- 'Step 1: Read the problem specification — understand the differential equations,
+  initial conditions, boundary conditions, and what to solve for'
+- 'Step 2: For ODE systems: implement the classical 4th-order Runge-Kutta (RK4) method.
+  For each step: compute k1, k2, k3, k4 and update y += (k1+2*k2+2*k3+k4)/6 * dt'
+- 'Step 3: For predator-prey (Lotka-Volterra): dx/dt = ax - bxy, dy/dt = -cy + dxy.
+  Track populations over time, detect equilibrium points'
+- 'Step 4: For signal processing: use numpy for FFT, scipy.signal for filtering. Identify
+  dominant frequencies and filter noise'
+- 'Step 5: Choose appropriate time step dt — must be small enough for numerical stability.
+  Verify energy conservation where applicable'
+- 'Step 6: Write output: for ODE — time series CSV (t, x, y, ...) with sufficient
+  precision; for signal — frequency spectrum CSV'
+- 'Step 7: Verify the output physically plausible: populations stay non-negative,
+  energy-like quantities are conserved'
+examples:
+- 'Correct: RK4: k1 = f(t, y); k2 = f(t+dt/2, y+dt/2*k1); k3 = f(t+dt/2, y+dt/2*k2);
+  k4 = f(t+dt, y+dt*k3); y_new = y + dt/6*(k1+2*k2+2*k3+k4)'
+- 'Correct: for Lotka-Volterra: use np.linspace(0, T, N) for time grid; store (t_vals,
+  x_vals, y_vals) as CSV'
+- 'Wrong: use too-large dt without checking stability — RK4 requires dt << characteristic
+  time scale of the system'
+compact: 'Lotka-Volterra predator-prey: dx/dt=ax-bxy, dy/dt=-cy+dxy — RK4: k1=fn(t,y),
+  k2=fn(t+dt/2,y+dt/2*k1) — predator prey populations over time CSV output'

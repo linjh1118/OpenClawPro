@@ -1,0 +1,22 @@
+name: research_and_information_gathering
+description: Research and information gathering tasks — look up information, conduct research, fetch web data, analyze markets or topics
+trigger_keywords:
+  - "stock"
+  - "research"
+  - "market"
+  - "conference"
+  - "look up"
+  - "fetch"
+  - "web search"
+  - "price"
+  - "competitor"
+  - "industry"
+steps:
+  - "Identify what specific information needs to be gathered"
+  - "Use web search or web fetch tools to gather current, accurate data"
+  - "Structure findings clearly with supporting evidence"
+  - "Present research in an organized format with clear sections"
+examples:
+  - "Correct: web search for current data → synthesize findings → present in organized format"
+  - "Correct: gather data on multiple items → create structured comparison"
+compact: "Use web search for current data — structure findings clearly with evidence"

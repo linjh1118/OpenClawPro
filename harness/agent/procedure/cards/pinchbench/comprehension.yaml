@@ -1,0 +1,22 @@
+name: document_reading_and_summarization
+description: Document reading and summarization tasks — read documents, summarize content, extract key information, answer questions from provided files
+trigger_keywords:
+  - "summarize"
+  - "summary"
+  - "pdf"
+  - "explain"
+  - "understand"
+  - "comprehension"
+  - "document"
+  - "read"
+  - "extract"
+  - "answer from"
+steps:
+  - "Read all provided input files before generating any output"
+  - "Identify the core information from the document content"
+  - "Answer questions based on what is stated in the provided documents"
+  - "Base answers on the actual document content"
+examples:
+  - "Correct: read the document first → identify main points → write a concise summary"
+  - "Correct: base the answer on the document content"
+compact: "Read documents first — answer from actual content only"

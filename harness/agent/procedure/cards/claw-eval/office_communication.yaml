@@ -1,0 +1,27 @@
+# T4a: Program Support Card - Office Communication
+# Domain: office_qa + communication
+# Assessment dimension: tool_usage (30%) + completion (35%) + content (35%)
+
+- name: office_communication
+  description: >
+    Office communication handling method: retrieve messages from inbox,
+    classify and categorize correctly, compose appropriate responses,
+    manage email/inbox operations with proper categorization
+  domain: office_qa + communication
+  program_goal: Efficiently handle office communication tasks including email triage, classification, and response drafting
+  prerequisites:
+    - Ability to use office tools (email, calendar, documents, notes)
+    - Can classify messages into correct categories (needs reply, FYI, spam, notification, etc.)
+    - Can compose clear, professional responses when required
+  steps:
+    - "Step 1: Retrieve messages from inbox using the email service tool"
+    - "Step 2: Analyze each message content and determine its category (needs reply, FYI, spam, notification, etc.)"
+    - "Step 3: Classify each message correctly according to the task's categorization criteria"
+    - "Step 4: Take appropriate action for each category (reply to urgent, archive FYI, flag for follow-up, etc.)"
+    - "Step 5: When drafting replies, ensure tone matches the original message and addresses all questions"
+    - "Step 6: Verify categorization is correct and no messages are missed or miscategorized"
+  common_pitfalls:
+    - "Missing messages: Always retrieve the full inbox or all relevant folders."
+    - "Incorrect categorization: Follow the task's specific categorization criteria (reply needed vs FYI vs spam)."
+    - "Generic responses: When replying, address the specific questions and points in the original message."
+    - "Not using tool results: Base your actions on the actual data retrieved from services, not assumptions."

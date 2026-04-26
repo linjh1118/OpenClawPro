@@ -1,0 +1,23 @@
+# T4a: Program Support Card - Safe File Operation
+# Domain: file_ops
+# Paper reference: T4a - Program Support Cards for skill availability
+
+- name: safe_file_operations
+  description: Safely read, write, and manipulate files in a sandboxed environment
+  domain: file_ops
+  program_goal: Correctly read input files and write output files while preserving data integrity and handling edge cases.
+  prerequisites:
+    - Identify the target file path and understand the expected file format
+    - Ensure the parent directory exists and is writable
+  steps:
+    - Step 1: Verify the file exists and check file size before reading (avoid reading zero-byte or huge files)
+    - Step 2: Detect file format (JSON, CSV, PDF, text, binary) and select the appropriate parser
+    - Step 3: Parse the file, handling malformed entries gracefully (log skipped lines with reason)
+    - Step 4: Perform the required read or write operation
+    - Step 5: After writing, verify the output file is created and its content is non-empty
+    - Step 6: For write operations, consider atomic writes (write to temp file, then rename) to avoid partial corruption
+  common_pitfalls:
+    - "Reading files without checking existence: Leads to opaque errors; always verify first."
+    - "Assuming file encoding is UTF-8: Binary or non-UTF files need specific handling."
+    - "Overwriting files without backup: Use temp files and rename for atomic writes."
+    - "Ignoring file size limits: Extremely large files can exhaust memory; consider streaming or chunking."

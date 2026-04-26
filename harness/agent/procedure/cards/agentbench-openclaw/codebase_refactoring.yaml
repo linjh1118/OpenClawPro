@@ -1,0 +1,25 @@
+name: codebase_refactoring
+description: Execute structured code refactoring across multiple files — read a refactoring plan, split a monolithic module into focused sub-modules, update all import statements in consumer files, run tests to verify correctness, and commit each logical step separately
+trigger_keywords:
+  - "refactor"
+  - "split module"
+  - "update imports"
+  - "refactoring plan"
+  - "extract module"
+  - "modularize"
+  - "separate concerns"
+  - "run tests"
+  - "pytest"
+  - "git commit"
+steps:
+  - "Read the refactoring plan to understand target module structure"
+  - "Identify all functions/classes to extract and their dependencies"
+  - "Create new module files with properly organized code"
+  - "Update all import statements in consumer files and tests to point to new module locations"
+  - "Run the test suite to verify refactoring did not break functionality"
+  - "Delete the original monolithic file only after all tests pass"
+  - "Commit each logical step with a descriptive message"
+examples:
+  - "Correct: read plan → extract target modules → update all imports → run pytest → commit each step"
+  - "Correct: split monolithic file into focused modules → update consumer files → verify tests → commit"
+compact: "Read refactoring plan — split modules — update all imports — run tests to verify — commit each step"

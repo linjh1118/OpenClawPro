@@ -1,0 +1,29 @@
+# T4a: Program Support Card - Productivity Operations
+# Domain: productivity
+# Assessment dimension: completion (35%) + trajectory (20%) + content (30%)
+
+- name: productivity_operations
+  description: >
+    Productivity task completion method: identify required service operations,
+    retrieve and cross-reference multiple records, extract structured information
+    (action items, assignees, deadlines), verify completeness, execute operations correctly
+  domain: productivity
+  program_goal: Complete productivity tasks by correctly invoking calendar, notes, email, todo, or other office services
+  prerequisites:
+    - Know what productivity services are available (calendar, notes, email, todo, inventory, etc.)
+    - Can execute create, read, update, delete operations with correct parameters
+    - Can verify that operations completed successfully by checking returned data
+  steps:
+    - "Step 1: List all available records (notes, tasks, events) to get an overview"
+    - "Step 2: Retrieve detailed content from ALL relevant records — do not skip any potentially relevant ones"
+    - "Step 3: Cross-reference multiple records to build complete picture (action items often span records)"
+    - "Step 4: Extract structured information: assignees, deadlines, action items, participants"
+    - "Step 5: Verify all required information is collected before executing any share/create/update operations"
+    - "Step 6: Execute the final operation with verified parameters"
+    - "Step 7: Confirm the final state matches the task requirements"
+  common_pitfalls:
+    - "Skipping records: Retrieve ALL relevant records — partial information leads to incomplete actions."
+    - "Not cross-referencing: Action items in one record may reference details in another record."
+    - "Missing required fields: Ensure assignees, deadlines, and recipients are all verified before sharing."
+    - "Wrong recipients: Only share with people explicitly mentioned in the records."
+    - "Not verifying results: Always check that changes are reflected in the service response."

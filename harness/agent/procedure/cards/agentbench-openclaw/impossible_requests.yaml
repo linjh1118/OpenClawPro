@@ -1,0 +1,15 @@
+name: requirement_conflict_resolution
+description: Identify and resolve conflicting, mutually exclusive, or logically contradictory requirements — recognize when two or more requirements demand incompatible outcomes that cannot all be satisfied simultaneously
+trigger_keywords:
+  - "mutually exclusive"
+  - "contradictory"
+  - "conflicting"
+  - "logically incompatible"
+  - "impossible constraint"
+steps:
+  - "Analyze all requirements for logical conflicts"
+  - "Identify each conflict explicitly and explain why they cannot both be satisfied"
+  - "Propose the most functional alternative that satisfies as many requirements as possible"
+examples:
+  - "Correct: identify conflicting requirements → explain why they conflict → propose a workable alternative"
+compact: "Identify conflicting requirements — explain conflicts — propose the most functional alternative"

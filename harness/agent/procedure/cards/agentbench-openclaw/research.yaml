@@ -1,0 +1,25 @@
+name: document_synthesis_and_summarization
+description: Read and synthesize information from documents — summarize lengthy documents into structured key findings, identify limitations and gaps, produce concise executive summaries; investigate code mysteries using git history, trace bugs to their origin commit, and document findings in a clear investigation report
+trigger_keywords:
+  - "summarize"
+  - "summary"
+  - "whitepaper"
+  - "key findings"
+  - "executive summary"
+  - "limitations"
+  - "investigate"
+  - "git archaeology"
+  - "git log"
+  - "git blame"
+  - "regression"
+  - "investigation report"
+  - "root cause"
+steps:
+  - "Read the entire source document to understand its full content"
+  - "Identify key findings, main points, and any limitations or gaps"
+  - "Synthesize information into a concise, structured summary"
+  - "Present findings with supporting evidence from the source"
+examples:
+  - "Correct: read document → extract key findings with explanations → write limitations section → executive summary"
+  - "Correct: use git log/blame to trace a bug → identify root cause commit → write investigation report"
+compact: "Read and summarize documents — extract key findings — identify limitations — present structured summary"

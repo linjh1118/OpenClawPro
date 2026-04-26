@@ -1,0 +1,54 @@
+name: clawbench_official_debugging_cs_engineering
+description: Debugging tasks — fix Python syntax errors, logic bugs, runtime crashes,
+  off-by-one errors, TypeErrors, KeyErrors, IndexErrors; run pytest to reproduce and
+  verify all fixes
+trigger_keywords:
+- debug
+- debugging
+- bug
+- fix
+- error
+- crash
+- failing
+- pytest
+- assertion
+- regression
+- investigate
+- syntax error
+- logic bug
+- runtime
+- off-by-one
+- exception
+- traceback
+- buggy
+- incorrect
+- wrong result
+steps:
+- 'Step 1: Run the script or tests first to reproduce the error — do NOT guess the
+  bug before running'
+- 'Step 2: Read the error message carefully: it shows the file, line number, exception
+  type, and full traceback'
+- 'Step 3: For test failures: read the full traceback, identify the first line where
+  the actual bug occurs (not just where the test fails)'
+- 'Step 4: Investigate the relevant code section: read the source file around the
+  error line, understand the intended logic vs actual behavior'
+- 'Step 5: Common bug patterns: off-by-one in range(), None/NoneType access on None
+  objects, KeyError from missing dict keys, IndexError on empty lists, integer division
+  // vs /, incorrect comparison operators (>, >=), missing return statements'
+- 'Step 6: Fix the root cause — do NOT modify the test to pass, do NOT suppress the
+  error with try/except pass, do NOT add output to hide the error'
+- 'Step 7: Re-run tests after fixing: pytest -v. Confirm all tests pass. If a task
+  lists specific bugs, verify each one is individually fixed'
+- 'Step 8: Verify: run ''ls workspace/'' and confirm all expected output files exist
+  and contain plausible results'
+examples:
+- 'Correct: pytest -v → read traceback → identify the first failing line → read the
+  source → fix → pytest again'
+- 'Correct: off-by-one: range(n) vs range(n+1) — test boundary with n=1 and n=0'
+- 'Correct: NoneType: add if x is not None: guard before accessing attributes or calling
+  methods'
+- 'Wrong: run pytest → see failure → immediately modify the test instead of fixing
+  the code'
+compact: Reproduce error with pytest first — read traceback — fix syntax error (missing
+  colon, bad indentation) — fix logic bug (off-by-one, wrong comparison) — verify
+  all tests pass

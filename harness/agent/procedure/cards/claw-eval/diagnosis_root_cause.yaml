@@ -1,0 +1,24 @@
+# T4a: Program Support Card - Root Cause Diagnosis
+# Domain: diagnosis
+# Assessment dimension: trajectory (20% weight)
+
+- name: diagnosis_root_cause
+  description: >
+    root cause diagnosis method: distinguish user-reported symptoms from actual root cause,
+    verify hypotheses through data analysis, avoid misdiagnosis patterns,
+    quantitative verification of diagnostic assumptions, systematic problem analysis
+  domain: diagnosis
+  program_goal: Accurately identify root cause and avoid misdiagnosis leading to wrong solutions
+  prerequisites:
+    - Ability to collect quantitative data from the system
+    - Understanding of common problem patterns and their typical symptoms
+    - Knowledge of how to verify hypotheses through data analysis
+  steps:
+    - "Step 1: Identify what the user believes is the root cause"
+    - "Step 2: List alternative root causes that could produce the observed symptoms"
+    - "Step 3: Design verification methods to test each hypothesis"
+    - "Step 4: Confirm root cause and explain why the initial assumption was wrong if applicable"
+  common_pitfalls:
+    - "Accepting user's diagnosis without verification: What users see are often symptoms, not causes."
+    - "Only checking the most obvious root cause: The real root cause may be deeper."
+    - "Not explaining why the diagnosis was wrong: Help users build correct mental models."

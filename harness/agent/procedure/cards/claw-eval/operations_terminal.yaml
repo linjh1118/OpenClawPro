@@ -1,0 +1,25 @@
+# T4a: Program Support Card - Operations and Terminal
+# Domain: operations + terminal
+# Assessment dimension: completion (35%) + trajectory (20%) + content (30%)
+
+- name: operations_terminal
+  description: >
+    System operations and terminal command method: execute shell commands safely,
+    check system status, perform CRUD operations on inventory/resources,
+    verify operation results, handle errors gracefully
+  domain: operations + terminal
+  program_goal: Complete system administration and operations tasks using appropriate tools and commands
+  prerequisites:
+    - Know how to execute shell commands safely
+    - Understand how to check operation results
+    - Can interpret system feedback and logs
+  steps:
+    - "Step 1: Identify the operation needed (create, read, update, delete, check status)"
+    - "Step 2: Execute the appropriate command or tool call"
+    - "Step 3: Verify the operation succeeded by checking the result or status"
+    - "Step 4: If verification fails, diagnose the issue and retry with corrected parameters"
+    - "Step 5: Report the final status clearly"
+  common_pitfalls:
+    - "Not verifying results: Always confirm the operation had the intended effect."
+    - "Using wrong operation type: Double-check whether task requires create, update, or delete."
+    - "Ignoring error messages: Error output contains important diagnostic information."

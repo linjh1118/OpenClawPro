@@ -1,0 +1,28 @@
+name: image_generation
+description: Image generation tasks — craft image prompts, use image generation tools, save generated images
+trigger_keywords:
+  - "image"
+  - "generate image"
+  - "draw"
+  - "picture"
+  - "photo"
+  - "illustration"
+  - "artwork"
+  - "render"
+  - "creative"
+  - "scene"
+negative_keywords:
+  - "code"
+  - "python"
+  - "script"
+  - "email"
+  - "calendar"
+steps:
+  - "Identify the core visual elements from the request: subjects, setting, atmosphere"
+  - "Craft a descriptive image prompt that captures all key elements"
+  - "Use the image generation tool with the crafted prompt"
+  - "Save the generated image to the specified location"
+examples:
+  - "Correct: decompose request into visual elements → craft rich descriptive prompt → generate → save"
+  - "Correct: add atmospheric details beyond the basic request"
+compact: "Craft a descriptive prompt, use image generation tool, save output to the correct location"

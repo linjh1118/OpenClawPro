@@ -1,0 +1,18 @@
+name: calendar_management
+description: Calendar and scheduling tasks — create calendar event files, handle time and date logic, manage meeting scheduling
+trigger_keywords:
+  - "calendar"
+  - "meeting"
+  - "schedule"
+  - "event"
+  - "invite"
+  - "timezone"
+steps:
+  - "For tasks involving calendar or scheduling: use standard iCalendar (ICS) format with proper BEGIN/END blocks"
+  - "Handle date and time parsing carefully — verify calculated dates against the current date"
+  - "Include standard calendar fields: date, time, title, and other relevant information as appropriate"
+  - "Validate the format is well-formed before completing the task"
+examples:
+  - "Correct: generate a calendar file with correct date, time, and relevant details"
+  - "Correct: handle timezone conversions with appropriate library or manual calculation"
+compact: "Use standard calendar file format — verify dates and times carefully"

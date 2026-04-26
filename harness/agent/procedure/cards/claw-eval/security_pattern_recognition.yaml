@@ -1,0 +1,23 @@
+# T4a: Program Support Card - Security Pattern Recognition
+# Domain: security
+# Paper reference: T4a - Program Support Cards for skill availability
+
+- name: security_pattern_recognition
+  description: Identify security risks, credential exposures, and compliance violations in system configurations
+  domain: security
+  program_goal: Systematically audit configuration data to detect security vulnerabilities, credential leaks, and policy violations.
+  prerequisites:
+    - Access to the configuration or system data to be audited
+    - Understand what constitutes a security risk in the given context (credential types, expired states, permission boundaries)
+  steps:
+    - "Step 1: Enumerate all configurable entities (integrations, services, API keys, permissions)"
+    - "Step 2: Check for credential exposure: API keys, tokens, passwords in plain text or accessible fields"
+    - "Step 3: Verify expiration and validity states: expired certificates, revoked keys, deprecated protocols"
+    - "Step 4: Assess permission boundaries: overly broad access, missing rate limits, insecure CORS policies"
+    - "Step 5: Cross-reference against known security patterns and compliance requirements"
+    - "Step 6: Generate a prioritized risk report with severity classification and specific remediation guidance"
+  common_pitfalls:
+    - "Focusing only on obvious leaks: Subtle misconfigurations (e.g., overly permissive IAM roles) can be equally dangerous."
+    - "Not verifying credential status: A key may exist but be revoked or rotated; always check validity."
+    - "Flagging everything as high severity: Triage findings by actual exploitability and impact."
+    - "Missing the context: A credential in a staging environment vs production has different risk profiles."

@@ -1,0 +1,50 @@
+name: clawbench_official_professional_domains
+description: Clinical healthcare and market research — HIPAA patient data de-identification
+  and privacy (replace names with anonymous IDs, remove SSN, generalize DOB), patient
+  data and lab value interpretation (mg/dL, mmol/L), pharmaceutical trial data,
+  customer survey NPS analysis, market segmentation and competitor analysis
+trigger_keywords:
+- clinical
+- medical
+- healthcare
+- market research
+- environmental
+- energy
+- climate
+- emissions
+- carbon
+- pharmaceutical
+- clinical trial
+- patient
+- hospital
+- diagnosis
+- drug
+- market segment
+- competitor
+- trend
+- renewable
+steps:
+- 'Step 1: Read all input data files carefully — medical records, market datasets,
+  environmental measurements, energy output logs'
+- 'Step 2: For clinical/medical data: understand HL7/FHIR formats, lab value units
+  (mg/dL, mmol/L), reference ranges. Flag abnormal values explicitly'
+- 'Step 3: For market research: identify market segments, key players, pricing trends,
+  and competitive landscape from the provided data'
+- 'Step 4: For environmental/energy data: parse time-series (hourly/daily readings),
+  compute totals, averages, and identify peaks or anomalies'
+- 'Step 5: For clinical data: be precise with calculations and units. Report findings
+  with appropriate clinical context (reference ranges, normal thresholds)'
+- 'Step 6: Write results to the required format with domain-appropriate precision
+  and units (do not round clinical lab values)'
+- 'Step 7: Verify the output matches the required format — check column names, units,
+  and value ranges against the task specification'
+- 'Step 8: Do not fabricate data — use only values found in the provided input files'
+examples:
+- 'Correct: for clinical: flag lab values outside reference range — Na < 137 mmol/L
+  or K > 5.0 mmol/L'
+- 'Correct: market research: segment analysis by price tier, identify top 3 competitors
+  by market share'
+- 'Wrong: skip reading the data and rely on general domain knowledge — always verify
+  against provided files'
+compact: Clinical lab values with units and reference ranges — NPS score from survey
+  responses — patient diagnosis data — market segment by price tier

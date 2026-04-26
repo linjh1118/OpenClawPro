@@ -1,0 +1,27 @@
+# T4a: Program Support Card - Content Curation and Filtering
+# Domain: content
+# Paper reference: T4a - Program Support Cards for skill availability
+
+- name: content_curation_and_filtering
+  description: Filter, categorize, and synthesize content from feeds or repositories to produce targeted, themed collections
+  domain: content
+  program_goal: Select and organize relevant content from a large corpus (RSS feeds, document repositories) into a coherent, targeted output.
+  prerequisites:
+    - Identify the content sources (feeds, repositories, lists)
+    - Understand the target audience or purpose of the curated output
+    - Know the relevance criteria for filtering and categorizing content
+  steps:
+    - "Step 1: Enumerate all available content sources and retrieve their full content lists"
+    - "Step 2: Apply initial relevance filtering based on topic, keywords, or domain criteria"
+    - "Step 3: For each candidate item, read the full content or summary to assess relevance depth"
+    - "Step 4: Categorize filtered content into logical groups (e.g., by topic, urgency, department, or type)"
+    - "Step 5: Prioritize items within each category (e.g., by recency, importance, or audience relevance)"
+    - "Step 6: Synthesize a curated output: write concise summaries or selections for each item, maintaining a consistent voice and structure"
+    - "Step 7: Add navigation aids (section headers, highlights, recommended reading) to improve readability"
+    - "Step 8: Verify the output covers the target scope and does not include clearly irrelevant items"
+  common_pitfalls:
+    - "Including too much content: A curated collection should be selective, not comprehensive."
+    - "Missing the target theme: Items that superficially match but don't address the core topic should be excluded."
+    - "Inconsistent categorization: Items that could fit multiple categories need clear justification for placement."
+    - "Not verifying recency: Content feeds may include outdated items; prioritize recent and authoritative sources."
+    - "Plagiarizing source text: Rephrase selections and summaries in your own words with attribution."

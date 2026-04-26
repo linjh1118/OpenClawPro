@@ -1,0 +1,49 @@
+name: clawbench_official_research_academic
+description: Academic and educational tasks — BibTeX citation network analysis with
+  networkx, rubric-based essay grading, literature review writing, course grade computation
+trigger_keywords:
+- research
+- academic
+- bibtex
+- citation
+- paper
+- literature
+- education
+- assessment
+- rubric
+- grade
+- essay
+- course
+- homework
+- tutor
+- grading
+- student
+- homework
+- exam
+- score
+steps:
+- 'Step 1: Read all provided input files (BibTeX files, essays, rubrics, problem sets,
+  course data)'
+- 'Step 2: For BibTeX citation tasks: parse entries with bibtexparser, build directed
+  graph with networkx, compute in-degree, centrality, identify top-cited papers'
+- 'Step 3: For rubric-based grading: read the rubric CSV carefully — extract criteria
+  names, max_points, and keywords per criterion'
+- 'Step 4: For grading: read each student submission, score per criterion based on
+  rubric keywords present, sum to total'
+- 'Step 5: For academic writing / literature review: structure as Introduction, Methods,
+  Results, Conclusion with citations from provided sources only'
+- 'Step 6: Write output in the required format — for grading: JSON with per-criterion
+  scores and total; for citation: JSON + CSV + Markdown summary'
+- 'Step 7: Include only evidence found in the provided source documents — do not fabricate
+  citations or academic claims'
+- 'Step 8: Verify output: confirm all required files exist in workspace/, check field
+  names and format match requirements exactly'
+examples:
+- 'Correct: bibtexparser → extract entries → networkx.DiGraph → add_edges → compute
+  in_degree() → top 3 by citations'
+- 'Correct: for rubric grading: for each criterion, count keyword occurrences in student
+  text → map to score range → sum'
+- 'Wrong: fabricate citations or score higher than rubric allows — grading must be
+  reproducible from rubric criteria'
+compact: 'bibtexparser to parse BibTeX — networkx DiGraph for citation edges — for
+  grading: score each rubric criterion from student text, sum to total JSON'

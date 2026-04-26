@@ -1,0 +1,25 @@
+# T4a: Program Support Card - Consultation QA
+# Domain: consultation
+# Assessment dimension: clarification (15%) + content (30%)
+
+- name: consultation_qa
+  description: >
+    Expert consultation answering method: understand user's domain-specific question,
+    gather authoritative information through search, perform numerical analysis if needed,
+    provide structured answer with evidence, handle multi-turn clarification
+  domain: consultation
+  program_goal: Provide accurate, authoritative answers to domain-specific expert questions
+  prerequisites:
+    - Ability to identify what domain knowledge is needed
+    - Can use web search to find authoritative sources
+    - Can perform numerical calculations when required
+  steps:
+    - "Step 1: Understand the user's question and identify domain context"
+    - "Step 2: Search for authoritative information to support the answer"
+    - "Step 3: Perform calculations or analysis if numerical elements are involved"
+    - "Step 4: Structure the answer clearly with evidence and reasoning"
+    - "Step 5: Ask clarifying questions if key details are missing"
+  common_pitfalls:
+    - "Answering without evidence: Always cite authoritative sources or provide calculations."
+    - "Ignoring numerical aspects: Quantitative support significantly improves scores."
+    - "Not clarifying ambiguous requirements: Ask targeted questions before providing final answer."

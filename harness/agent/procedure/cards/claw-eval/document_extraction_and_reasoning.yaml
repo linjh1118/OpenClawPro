@@ -1,0 +1,34 @@
+# T4a: Program Support Card - Document Extraction and Reasoning
+# Domain: document
+# Paper reference: T4a - Program Support Cards for skill availability
+
+- name: document_extraction_and_reasoning
+  description: Extract structured data from documents (machine-readable or scanned) and reason over the content to answer specific questions
+  domain: document
+  program_goal: Convert documents (PDFs, scans, images, papers) into structured data or answers, handling both machine-readable and non-machine-readable sources.
+  prerequisites:
+    - Know the document source (local file path or URL)
+    - Know what data fields or answers are needed and the expected output format
+    - For scanned/image documents: confirm OCR capability is available
+    - For machine-readable documents: identify the document type (PDF, CSV, structured text)
+  steps:
+    - "Step 1: Verify the document is accessible; download if provided as a URL; check file size before processing"
+    - "Step 2: Determine document type — machine-readable (PDF, CSV, JSON) or image-based (scan, photo, screenshot)"
+    - "Step 3a: For machine-readable documents: parse layout to identify structural regions (tables, text blocks, headers); handle multi-column text, merged cells, page headers/footers"
+    - "Step 3b: For scanned/image documents: apply OCR, handling skewed pages, poor scan quality, and multi-column layouts; post-process output to correct common OCR errors (e.g., '0' vs 'O', '1' vs 'l')"
+    - "Step 4: Locate the sections or data regions relevant to the target question; maintain cross-page context for multi-page documents"
+    - "Step 5: Extract target fields with attention to units, precision, and context (e.g., \"2602\" vs \"2602 million dollars\")"
+    - "Step 6: Validate extracted values against reasonable ranges; cross-reference related fields within the document"
+    - "Step 7: For structured output tasks: convert to CSV, JSON, or structured answer format with correct headers and data types"
+    - "Step 8: For explanation or simplification tasks (ELI5, lay summary): re-express the extracted information using accessible language, concrete analogies, and structured organization appropriate for the target audience level — avoid jargon, use everyday comparisons, break complex concepts into simple parts"
+    - "Step 9: Present the final answer with appropriate precision and context — not just a raw number"
+  common_pitfalls:
+    - "Skipping document type detection: PDFs may be scanned images that need OCR, not direct text extraction."
+    - "Misinterpreting merged table cells: Check row and column boundaries carefully; verify header alignment."
+    - "Dropping units or context: '75' is ambiguous without its unit or section context."
+    - "OCR hallucination: Always cross-check extracted text against the source region visually when possible."
+    - "Inconsistent parsing across pages: Use a consistent strategy rather than ad-hoc per page."
+    - "Over-precision: Historical or scanned documents may have approximate figures; match the source precision."
+    - "Missing units in numerical answers: Always include units when presenting extracted numbers."
+    - "Explanation too technical: For ELI5 tasks, avoid jargon — if a technical term is necessary, define it immediately."
+    - "Over-simplifying: Distilling content does not mean omitting key facts; verify all critical information is preserved."

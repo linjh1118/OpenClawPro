@@ -1,0 +1,41 @@
+name: clawbench_official_education_learning
+description: Educational assessment and personalized learning — rubric-based essay grading
+  and scoring, cognitive reasoning tests (CRT, logic puzzles), personalized learning plans
+  and tutoring, curriculum mapping and learning paths, educational assessment design
+trigger_keywords:
+- education
+- educational assessment
+- learning
+- student
+- teacher
+- tutoring
+- rubric
+- grading
+- essay
+- curriculum
+- learning plan
+- personalized
+- crt
+- cognitive
+- critical thinking
+- logic puzzle
+steps:
+- 'Step 1: Read all provided materials — student essays, rubrics, problem sets, requirements documents'
+- 'Step 2: For rubric-based grading: read the rubric CSV carefully — extract criteria names,
+  max_points, and keywords per criterion'
+- 'Step 3: For grading: read each student submission, score per criterion based on rubric
+  keywords present in the submission text, sum to total score'
+- 'Step 4: For cognitive/logic tasks: identify the problem type, apply appropriate reasoning
+  strategy, show step-by-step work'
+- 'Step 5: For learning path tasks: assess current skill level, identify gaps, sequence
+  topics in logical prerequisite order'
+- 'Step 6: Write output in the required format — for grading: JSON with per-criterion
+  scores and total; for learning: structured plan with topics and milestones'
+- 'Step 7: Verify: confirm output format matches requirements exactly, scores are within
+  rubric bounds'
+examples:
+- 'Correct: for rubric grading: for each criterion, count keyword occurrences in student
+  text → map to score range → sum'
+- 'Correct: for learning plan: assess prerequisites → sequence topics → estimate time per topic'
+- 'Wrong: fabricate rubric criteria or learning content not supported by provided materials'
+compact: "Rubric-based essay grading: score per criterion from student text, sum to total — CRT and logic puzzles: step-by-step reasoning — personalized learning: assess gaps, sequence topics, create learning plan"

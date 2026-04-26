@@ -1,0 +1,23 @@
+# T4a: Program Support Card - Cross-System Data Aggregation
+# Domain: workflow
+# Paper reference: T4a - Program Support Cards for skill availability
+
+- name: cross_system_aggregation
+  description: Collect, normalize, and cross-validate data from multiple independent sources
+  domain: workflow
+  program_goal: Build a consistent, coherent dataset by aggregating information from multiple services or data sources.
+  prerequisites:
+    - Identify all relevant data sources needed to complete the task
+    - Understand the data schema of each source
+  steps:
+    - Step 1: Query each data source independently, collecting the relevant subset of data
+    - Step 2: Normalize field names and data formats across sources (e.g., date formats, ID schemas)
+    - Step 3: Perform cross-field validation — check for consistency across independently sourced records
+    - Step 4: Identify and resolve conflicts or discrepancies (flag if resolution is not possible)
+    - Step 5: Merge data into a unified view for analysis or reporting
+    - Step 6: Verify the aggregated result covers all required dimensions and is free of obvious gaps
+  common_pitfalls:
+    - "Ignoring format differences between sources: Date fields like '2026-03-04' vs 'Mar 4, 2026' can silently break joins."
+    - "Trusting a single source without validation: Data may be stale or incomplete in one system."
+    - "Missing records due to pagination: Large result sets require iterative fetching."
+    - "Not flagging unresolved data conflicts: Silently picking one source may propagate errors."

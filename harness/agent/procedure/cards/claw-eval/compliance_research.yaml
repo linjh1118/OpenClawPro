@@ -1,0 +1,27 @@
+# T4a: Program Support Card - Compliance Research
+# Domain: compliance
+# Assessment dimension: numerical (35%) + content (40%) + trajectory (25%)
+
+- name: compliance_research
+  description: >
+    Compliance and regulatory research method: identify relevant regulatory frameworks,
+    search authoritative sources systematically, analyze specific requirements,
+    assess obligations and timelines, produce comprehensive reports
+  domain: compliance
+  program_goal: Research regulatory requirements and produce actionable compliance assessment reports
+  prerequisites:
+    - Can search for authoritative regulatory sources
+    - Can analyze and interpret legal and technical requirements
+    - Can identify compliance obligations and timelines
+  steps:
+    - "Step 1: Identify the relevant regulatory framework and scope of compliance requirements"
+    - "Step 2: Search for authoritative sources: official documents, government websites, industry standards"
+    - "Step 3: Analyze the specific requirements applicable to the given scenario in detail"
+    - "Step 4: Identify numerical requirements: deadlines, thresholds, penalty structures if applicable"
+    - "Step 5: Cross-reference multiple sources to verify accuracy of compliance information"
+    - "Step 6: Compile findings into a structured report with specific obligations and actionable steps"
+  common_pitfalls:
+    - "Using non-authoritative sources: Always cite official or reputable sources for compliance requirements."
+    - "Missing specific numerical details: Compliance often involves specific deadlines, fines, or thresholds — include them."
+    - "Vague recommendations: Provide specific actionable steps, not just general guidance."
+    - "Incomplete scope: Ensure all major compliance aspects from the regulatory framework are addressed."

@@ -1,0 +1,45 @@
+name: clawbench_official_cross_domain_creative
+description: Cross-domain synthesis and content analysis — product review sentiment
+  classification using keyword scoring and aggregate sentiment dashboard, extract
+  calendar entries from email messages (email to calendar synthesis), JSON to YAML
+  conversion with nesting preservation, CSV to JSON merge, creative writing and data
+  visualization (matplotlib
+  charts, dashboards), synthesizing structured data from multiple input formats
+trigger_keywords:
+- creative
+- video
+- image
+- visualization
+- plot
+- chart
+- presentation
+- dashboard
+- infographic
+- cross-domain
+- sentiment
+- matplotlib
+steps:
+- 'Step 1: Understand all input data sources (may span multiple formats: text, CSV,
+  JSON, images)'
+- 'Step 2: Synthesize information from all sources into a coherent output'
+- 'Step 3: For data visualization: use matplotlib or seaborn. Match the required chart
+  types, include labels, titles, and legends'
+- 'Step 4: For creative content: follow the tone and style specified. Structure content
+  logically with appropriate sections'
+- 'Step 5: For content transformation: understand the source format and target format.
+  Apply the transformation accurately'
+- 'Step 6: For cross-domain tasks: identify the key information from each domain and
+  integrate them coherently'
+- 'Step 7: Write output to the required format and location (workspace/)'
+- 'Step 8: Verify: run ''ls workspace/'' and read back to confirm format and content
+  quality'
+examples:
+- 'Correct: matplotlib: plt.bar(categories, values) → plt.xlabel(''X'') → plt.ylabel(''Y'')
+  → plt.savefig(''chart.png'')'
+- 'Correct: cross-domain synthesis: combine financial data analysis + market research
+  + legal context into a single comprehensive report'
+- 'Wrong: process only one data source when the task clearly requires synthesizing
+  multiple sources'
+compact: 'JSON to YAML: preserve nesting structure exactly — sentiment: classify as
+  positive/negative/neutral — cross-domain: merge email and calendar data into unified
+  format'

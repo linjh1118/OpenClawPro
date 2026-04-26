@@ -1,0 +1,16 @@
+name: dependency_mapping
+description: Map and document dependencies between modules or components
+trigger_keywords:
+  - "dependency"
+  - "depends on"
+  - "related"
+  - "interconnected"
+  - "cross-reference"
+  - "module"
+steps:
+  - "Identify what each module or component depends on"
+  - "Create structured records documenting those relationships"
+  - "Verify all referenced dependencies are accounted for"
+examples:
+  - "Correct: identify dependencies → document relationships → check all are accounted for"
+compact: "Identify and document module dependencies — verify all references are valid"

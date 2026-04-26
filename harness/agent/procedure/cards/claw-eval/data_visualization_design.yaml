@@ -1,0 +1,23 @@
+# T4a: Program Support Card - Data Visualization Design
+# Domain: document
+# Paper reference: T4a - Program Support Cards for skill availability
+
+- name: data_visualization_design
+  description: Design and generate appropriate charts to represent data relationships clearly and accurately
+  domain: document
+  program_goal: Select the correct chart type and render an informative visualization that accurately reflects the underlying data.
+  prerequisites:
+    - Have the processed data ready in tabular format (CSV or DataFrame)
+    - Understand the visualization goal (comparison, trend, distribution, relationship)
+  steps:
+    - "Step 1: Analyze data dimensions: number of variables, data type (categorical vs continuous), and the relationship to show"
+    - "Step 2: Select the appropriate chart type: line (trend over time), bar (categorical comparison), scatter (correlation), radar (multi-dimensional comparison), etc."
+    - "Step 3: Design visual mapping: axis ranges, color scheme, legend placement, label clarity"
+    - "Step 4: Implement the chart using appropriate libraries, ensuring the visualization accurately reflects the data (no truncated axes, correct aspect ratios)"
+    - "Step 5: Add necessary annotations: axis labels, title, data labels, source attribution"
+    - "Step 6: Verify the chart renders correctly and visually communicates the intended insight"
+  common_pitfalls:
+    - "Using the wrong chart type for the data: Bar charts for trends is misleading; line charts for categories is inappropriate."
+    - "Truncated or misleading axes: Y-axis should start at 0 for bar charts; line charts can use adaptive ranges."
+    - "Poor color contrast or inaccessible palettes: Ensure sufficient contrast and avoid red-green only encoding."
+    - "Overcrowding the chart: Too many series or labels reduces readability; consider faceting or filtering."

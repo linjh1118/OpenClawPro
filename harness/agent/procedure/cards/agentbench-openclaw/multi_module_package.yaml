@@ -1,0 +1,19 @@
+name: multi_module_project_structure
+description: Scaffold and wire multi-module projects with cross-module dependencies
+trigger_keywords:
+  - "multi-module"
+  - "cross-module"
+  - "interdependent"
+  - "import resolution"
+  - "package"
+  - "scaffold"
+  - "library"
+  - "components"
+steps:
+  - "Read the specification to understand all modules and their relationships"
+  - "Create the package directory structure with initialization files at every level"
+  - "Write cross-module imports carefully to avoid circular dependency issues"
+  - "Verify all module dependencies resolve correctly"
+examples:
+  - "Correct: understand architecture → create directory structure → wire imports → verify dependencies"
+compact: "Create package structure — wire cross-module imports — verify all dependencies resolve"

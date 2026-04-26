@@ -1,0 +1,21 @@
+name: email_inbox_processing
+description: Email inbox processing tasks — read inbox emails, triage messages, categorize, search for specific content
+trigger_keywords:
+  - "inbox"
+  - "email"
+  - "priority"
+  - "categorize"
+  - "urgency"
+  - "actionable"
+  - "incident"
+  - "search inbox"
+steps:
+  - "Discover all email files by browsing the directory — do not assume filenames without checking"
+  - "Read every email in full before generating any output"
+  - "Identify which emails require action and which can be categorized as informational"
+  - "Group related emails together when their content connects across messages"
+  - "For each actionable email, provide a specific and concrete recommended action"
+examples:
+  - "Correct: browse inbox → read all emails → identify urgent items → provide actionable recommendations"
+  - "Correct: group related alerts and their corresponding context emails together"
+compact: "Read all inbox emails — identify urgency, group related messages, provide actionable recommendations"

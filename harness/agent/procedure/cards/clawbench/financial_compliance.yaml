@@ -1,0 +1,48 @@
+name: clawbench_official_financial_compliance
+description: Regulatory compliance and accounting — GDPR data processing audit (check lawful basis, consent, retention days, third-party sharing), SOX controls, AML screening, HIPAA assessment, NDA clause extraction with risk classification, double-entry journal entries (debit and credit), trial balance, financial statement preparation, invoice validation, beta portfolio analysis from stock returns CSV (Beta = Cov(stock, market) / Var(market), compute covariance and variance), DCF valuation, financial risk metrics (VaR, CVaR)
+trigger_keywords:
+  - accounting
+  - invoice
+  - financial
+  - compliance
+  - contract
+  - regulatory
+  - audit
+  - budget
+  - expense
+  - revenue
+  - fraud
+  - balance sheet
+  - payment
+  - billing
+  - transaction
+  - legal
+  - clause
+  - nda
+  - nda clause
+  - risk assessment
+  - liability
+  - double-entry
+  - journal entry
+  - debit
+  - credit
+  - portfolio beta
+  - covariance
+  - variance
+  - gdpr
+  - lawful basis
+  - stock return
+steps:
+  - 'Step 1: Read all financial documents (invoices, contracts, financial statements) carefully before computing anything'
+  - 'Step 2: For accounting tasks: understand the accounting logic — debits/credits, balance sheets, income statements must balance'
+  - 'Step 3: For portfolio beta: Beta = Cov(stock, market) / Var(market). Use pandas to compute covariance and variance from return data'
+  - 'Step 4: For contract review: identify and extract all key clauses: parties, obligations, deadlines, termination conditions, liability limits, governing law, exclusions'
+  - 'Step 5: For risk assessment in contracts: classify each clause risk level (low/medium/high) based on: broad exclusions, unlimited liability, missing termination clauses, ambiguous definitions'
+  - 'Step 6: For regulatory compliance: cross-reference the document against the specified regulation, identify specific violations by clause number or content'
+  - 'Step 7: Write output in the required format — for contract review: JSON with clause type, content, and risk_level per clause'
+  - 'Step 8: Do NOT fabricate financial data or modify contract language — extract and classify only what is in the provided documents'
+examples:
+  - "Correct: Beta = df['stock'].cov(df['market']) / df['market'].var() for portfolio analysis"
+  - "Correct: from decimal import Decimal; total = sum(Decimal(str(amt)) for amt in line_items)"
+  - "Correct: contract clause analysis: {type: 'exclusion', content: '...', risk_level: 'high', reason: 'unusually broad scope'}"
+compact: "Beta = Cov(stock, market)/Var(market) for portfolio analysis — Decimal for currency — double-entry journal: debit must equal credit"

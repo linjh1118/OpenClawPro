@@ -1,0 +1,27 @@
+# T4a: Program Support Card - Tabular Data File Analysis
+# Domain: data_analysis
+# Paper reference: T4a - Program Support Cards for skill availability
+
+- name: tabular_data_file_analysis
+  description: Analyze structured data files (CSV, extracted spreadsheet text, JSON) to extract business metrics, perform aggregations, and produce summary reports
+  domain: data_analysis
+  program_goal: Read and analyze tabular data files, compute business metrics (totals, rankings, comparisons), and produce accurate summary outputs.
+  prerequisites:
+    - Identify all relevant data files and their formats (CSV, extracted text, JSON)
+    - Understand the target metrics and aggregations required by the task
+  steps:
+    - "Step 1: Identify and enumerate all data files; determine format (CSV, extracted text from spreadsheets, JSON, etc.)"
+    - "Step 2: For CSV files: read with proper delimiter detection; for extracted text: parse into tabular structure; for JSON: load and navigate the data tree"
+    - "Step 3: Clean and normalize data: handle missing values, inconsistent column names, date formats, and numeric formatting"
+    - "Step 4: Filter to the relevant data subset based on the task's scope (date range, category, region, etc.)"
+    - "Step 5: Compute required metrics: totals (sum), counts, rankings (top/bottom N), comparisons (budget vs actual), period-over-period changes"
+    - "Step 6: Cross-validate computed metrics by checking that partial sums add up to reported totals"
+    - "Step 7: Merge data from multiple files if the task requires combining sources (e.g., sales + expenses)"
+    - "Step 8: Present findings as a structured summary with clear metrics, proper units, and source attribution"
+  common_pitfalls:
+    - "Missing column headers in CSV: Always check if the first row is a header or data."
+    - "Inconsistent numeric formats: '1,000' vs '1000.5' vs '1000.5%' require different parsing."
+    - "Ignoring filtered rows: Some rows may be voided, cancelled, or test data — exclude based on status."
+    - "Off-by-one in date filtering: Boundary dates (end of quarter) need precise comparison logic."
+    - "Cross-file merging errors: Ensure join keys (e.g., department names) are normalized before merging."
+    - "Reporting approximate figures with unnecessary precision: Match the precision of the source data."

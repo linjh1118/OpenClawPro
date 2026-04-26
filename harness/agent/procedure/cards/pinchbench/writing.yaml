@@ -1,0 +1,24 @@
+name: writing_and_content_composition
+description: Writing and content composition tasks — write blog posts, compose emails, create reports and summaries
+trigger_keywords:
+  - "blog"
+  - "email"
+  - "draft"
+  - "write"
+  - "compose"
+  - "article"
+  - "report"
+  - "summary"
+  - "humanize"
+  - "reply"
+  - "content"
+steps:
+  - "Understand the writing task type and intended audience"
+  - "For emails: include appropriate structure (subject, greeting, body, signature) with professional tone"
+  - "For reports and summaries: browse the workspace to discover all source files, read all of them, then write"
+  - "For text humanization: rewrite content in a natural voice while preserving meaning"
+  - "Write output to a file in the workspace as specified"
+examples:
+  - "Correct: understand the task → write appropriate content → save to file"
+  - "Correct: read all source files first → synthesize → write structured output"
+compact: "Save written content to workspace files — format for the target medium"

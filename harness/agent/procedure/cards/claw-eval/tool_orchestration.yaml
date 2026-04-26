@@ -1,0 +1,26 @@
+# T4a: Program Support Card - Tool Orchestration
+# Domain: tool_orchestration
+# Assessment dimension: trajectory (20% weight)
+
+- name: tool_orchestration
+  description: >
+    tool selection and orchestration strategy: classify task type accurately,
+    select appropriate tools for the task, verify tool outputs,
+    iterate with alternative tools if results are unexpected or incomplete,
+    efficient tool usage pattern for task completion
+  domain: tool_orchestration
+  program_goal: Complete tasks efficiently by selecting and orchestrating the right tools
+  prerequisites:
+    - Know what tools are available in the current environment
+    - Understand the appropriate use case for each tool type
+    - Can distinguish between tasks requiring precision vs. exploration
+  steps:
+    - "Step 1: Classify the task type and identify which tools are needed"
+    - "Step 2: Execute the selected tools and collect the results"
+    - "Step 3: Verify if the results are complete and correct"
+    - "Step 4: If results are unexpected, try alternative tools or approaches"
+  common_pitfalls:
+    - "Using the wrong tool for the task type: Match tool capabilities to task requirements."
+    - "Not verifying tool outputs: Always check if results make sense."
+    - "Repeating the same failed approach: Change tools after 2-3 unsuccessful attempts."
+    - "Over-using tools: Use the minimum set of tools needed to complete the task."

@@ -1,0 +1,25 @@
+# T4a: Program Support Card - Information Gathering
+# Domain: information_gathering
+# Assessment dimension: clarification (15%) + numerical (35%)
+
+- name: information_gathering
+  description: >
+    research and information synthesis method: collect relevant data from available sources,
+    analyze patterns and extract insights, synthesize findings into actionable recommendations,
+    provide quantitative evidence and qualitative analysis
+  domain: information_gathering
+  program_goal: Gather and synthesize information to provide comprehensive, evidence-based recommendations
+  prerequisites:
+    - Ability to search and collect relevant information
+    - Understanding of how to analyze data patterns
+    - Can translate findings into actionable recommendations
+  steps:
+    - "Step 1: Identify what information is needed and gather relevant data"
+    - "Step 2: Analyze the data to extract patterns and insights"
+    - "Step 3: Synthesize findings with both quantitative evidence and qualitative analysis"
+    - "Step 4: Provide actionable recommendations based on the synthesized information"
+  common_pitfalls:
+    - "Gathering insufficient information: Ensure enough data points for reliable analysis."
+    - "Missing quantitative support: Include numerical evidence when available."
+    - "Providing vague recommendations: Make recommendations specific and actionable."
+    - "Not verifying information accuracy: Check facts before synthesizing."

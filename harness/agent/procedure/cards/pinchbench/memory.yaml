@@ -1,0 +1,30 @@
+name: memory_retrieval_and_persistence
+description: Memory retrieval and knowledge persistence tasks — recall facts from context files, store and retrieve information
+trigger_keywords:
+  - "memory"
+  - "remember"
+  - "recall"
+  - "persist"
+  - "store"
+  - "forget"
+  - "previous"
+  - "earlier"
+  - "told you"
+  - "context"
+  - "knowledge"
+  - "facts"
+negative_keywords:
+  - "calendar"
+  - "email"
+  - "write a blog"
+  - "web search"
+steps:
+  - "Identify whether the requested information comes from a stored context file or the user's current prompt"
+  - "For context/memory retrieval: locate and read the relevant file in the workspace before answering"
+  - "Extract the answer from file content — do not rely on training data memory"
+  - "Verify extracted facts match the file content — do not hallucinate details"
+  - "When asked to store information: save it in a structured format in the workspace"
+examples:
+  - "Correct: read the context file → extract facts → answer from file content"
+  - "Correct: store user-provided information to a file for later retrieval"
+compact: "Read context/memory files first — store facts in structured format, verify against file content"

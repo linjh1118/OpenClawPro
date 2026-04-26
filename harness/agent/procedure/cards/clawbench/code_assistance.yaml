@@ -1,0 +1,38 @@
+name: clawbench_official_code_assistance
+description: Code implementation tasks — write Python code, implement algorithms, pytest unit tests with type annotations, write Token Bucket rate limiters, thread-safe data structures (stack, queue)
+trigger_keywords:
+  - code
+  - python
+  - implement
+  - syntax
+  - unittest
+  - type annotation
+  - palindrome
+  - stack
+  - algorithm
+  - data structure
+  - function
+  - test
+  - rate limiter
+  - token bucket
+  - threading
+  - lock
+  - thread-safe
+  - unit test
+  - pytest
+  - docstring
+steps:
+  - 'Step 1: Read the task description and any provided input files carefully — understand what needs to be implemented'
+  - 'Step 2: Understand the expected input/output format. For algorithmic tasks: work through a few examples by hand'
+  - 'Step 3: For type annotations: add correct type hints to all function parameters and return values. Use typing module for complex types'
+  - 'Step 4: For unit tests: write pytest test cases covering: normal cases, edge cases (empty input, single element), and error cases'
+  - 'Step 5: For algorithm implementation: use appropriate data structures (stack, queue, dict, set). Check for off-by-one errors. For rate limiters: use threading.Lock for thread safety'
+  - 'Step 6: Write clean, well-structured code with appropriate error handling'
+  - 'Step 7: Run the verifier: pytest tests or grading script. Fix any failures before completing'
+  - 'Step 8: Verify all expected output files are created in the workspace'
+examples:
+  - 'Correct: def add(a: int, b: int) -> int: return a + b (with type annotations)'
+  - 'Correct: test cases: test_empty(), test_single(), test_normal(), test_negative()'
+  - 'Correct: for rate limiter: self.lock = threading.Lock(); with self.lock: self.tokens = min(capacity, self.tokens + elapsed * rate)'
+  - 'Wrong: implement without running tests — always verify with the grading script'
+compact: "Write Python with type hints — Token Bucket with threading.Lock — pytest: test_empty, test_normal, test_edge — data structures: push/pop/isEmpty"

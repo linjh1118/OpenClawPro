@@ -1,0 +1,27 @@
+# T4a: Program Support Card - Code Analysis and Verification
+# Domain: coding
+# Assessment dimension: completion (35%) + trajectory (25%) + content (40%)
+
+- name: code_analysis_verification
+  description: >
+    Code analysis and verification method: understand code structure and purpose,
+    identify potential issues through systematic review, verify hypotheses through execution,
+    provide specific evidence-based recommendations
+  domain: coding
+  program_goal: Identify defects, vulnerabilities, and performance issues through systematic analysis and execution verification
+  prerequisites:
+    - Understand the programming language and runtime environment
+    - Can execute code to verify hypotheses
+    - Can interpret execution results and error outputs
+  steps:
+    - "Step 1: Read and understand the code's overall structure, purpose, and expected behavior"
+    - "Step 2: Identify the core logic paths and data flow; note any suspicious patterns"
+    - "Step 3: Formulate specific hypotheses about potential issues (do not guess without evidence)"
+    - "Step 4: Execute code to reproduce and verify each hypothesis — static analysis alone is insufficient"
+    - "Step 5: Analyze execution results: confirm or refute each hypothesis with specific evidence"
+    - "Step 6: Provide actionable recommendations with evidence (error outputs, line numbers, stack traces)"
+  common_pitfalls:
+    - "Skipping execution verification: Always run code to confirm issues — do not rely on speculation alone."
+    - "Vague or generic feedback: Provide specific evidence (file names, line numbers, error messages) explaining the causal mechanism."
+    - "Missing boundary conditions: The most common defects occur at input space boundaries."
+    - "Focusing on style over correctness: Prioritize correctness and safety issues over formatting."

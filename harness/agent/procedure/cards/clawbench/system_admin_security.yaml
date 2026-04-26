@@ -1,0 +1,52 @@
+name: clawbench_official_system_admin_security
+description: Security code review and system administration — scan source code files for
+  hardcoded credentials (passwords, API keys, tokens, AWS keys), detect SQL injection
+  and XSS vulnerabilities in Python code, dependency vulnerability scanning, secrets
+  scanning in git history, parse du -sh output to generate disk usage reports (top-N
+  largest directories, total bytes), log file analysis with grep and awk, Linux
+  filesystem analysis
+trigger_keywords:
+- system admin
+- disk usage
+- linux command
+- du output
+- security
+- log file
+- firewall
+- ssh
+- cron
+- user management
+- permission
+- hardcoded credential
+- api key
+- password
+- secret
+- vulnerability
+- cve
+- nmap
+- server monitoring
+steps:
+- 'Step 1: Read all provided input files (log files, filesystem output, security scan
+  results) before analysis'
+- 'Step 2: For disk usage: parse du output, identify largest directories, summarize
+  by category. Use awk for column extraction'
+- 'Step 3: For log analysis: use grep, awk, and sed for text processing. Regex to
+  extract timestamps, IPs, error types, and count per category'
+- 'Step 4: For security tasks: scan source code for hardcoded credentials (passwords,
+  API keys, tokens, secrets). Use grep -r for pattern matching'
+- 'Step 5: For bash/shell tasks: write clean, robust shell scripts with error handling.
+  Add shebang #!/bin/bash'
+- 'Step 6: Structure output clearly: disk usage reports, security scan summaries,
+  or log summaries with counts per category'
+- 'Step 7: Write output to the workspace as specified (Markdown report, CSV summary,
+  JSON output)'
+- 'Step 8: Verify output: run ls workspace/ and read back the output to confirm format'
+examples:
+- 'Correct: awk "BEGIN{FS=OFS="\t"} {sum[$2]+=$1} END{for(d in sum)print sum[d],d}"
+  du_output.txt for disk analysis'
+- 'Correct: grep -rE (password|api_key|secret|token) workspace/ for credential scanning'
+- 'Correct: grep -E ERROR|WARN|CRIT app.log | sort | uniq -c | sort -rn for log summary'
+- 'Wrong: write report without analyzing the actual log or system output provided
+  in the task'
+compact: 'Parse du -sh output with awk for disk usage — grep -rE for hardcoded credentials
+  — log analysis: grep ERROR|WARN|count — write structured system administration reports'

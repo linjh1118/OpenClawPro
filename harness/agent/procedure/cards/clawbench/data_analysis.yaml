@@ -1,0 +1,46 @@
+name: clawbench_official_data_analysis
+description: Data analysis, database, and data science tasks — SQL queries and SQLite
+  operations, descriptive statistics (mean, median, mode, std_dev) from CSV data,
+  K-Means clustering with elbow method and min-max normalization, pandas data
+  pipelines, statistical tests, JOINs and GROUP BY
+trigger_keywords:
+- data analysis
+- data-analysis
+- data science
+- database
+- sql
+- sqlite
+- query
+- statistics
+- pipeline
+- pandas
+- numpy
+- aggregate
+- filter
+- mean median mode
+- clustering
+steps:
+- 'Step 1: Read all input files (CSVs, databases, JSON) to understand the data schema
+  before analysis'
+- 'Step 2: For SQL tasks: understand the database schema (tables, columns, relationships).
+  Write queries with appropriate JOINs, GROUP BY, and HAVING clauses'
+- 'Step 3: For statistical analysis: use pandas for data manipulation, scipy.stats
+  for statistical tests (t-test, chi-square, correlation)'
+- 'Step 4: For data pipelines: chain operations: load → clean → transform → aggregate
+  → output'
+- 'Step 5: Handle missing values explicitly: df.fillna() or df.dropna() with justification
+  in comments'
+- 'Step 6: For database operations: use sqlite3 (built into Python) for .db files.
+  Write results to CSV or JSON as specified'
+- 'Step 7: Generate a structured analysis report with: data overview, methodology,
+  findings, and conclusion'
+- 'Step 8: Verify the output file exists and matches the required format before completing'
+examples:
+- 'Correct: sqlite3.connect(''db'') → cursor.execute(''SELECT ... FROM t1 JOIN t2
+  ON ... GROUP BY ...'') → fetchall() → write CSV'
+- 'Correct: pd.merge(df1, df2, on=''id'', how=''left'') → df.groupby(''category'').agg({''value'':
+  ''sum''})'
+- 'Wrong: skip the data inspection step and assume column names — always df.head()
+  and df.info() first'
+compact: K-Means with elbow method (k=3,4,5) — MinMaxScaler normalization — SQL JOINs,
+  GROUP BY, HAVING — pandas for data pipelines

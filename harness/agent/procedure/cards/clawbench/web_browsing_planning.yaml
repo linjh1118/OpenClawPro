@@ -1,0 +1,40 @@
+name: clawbench_official_web_browsing_planning
+description: Project planning and web browsing tasks — extract user stories from
+  product requirements documents, project phase planning with dependencies and effort
+  estimation, fetch web pages and scrape HTML tables, REST API calls and HTTP requests,
+  URL-based data extraction
+trigger_keywords:
+- web
+- browse
+- planning
+- scrape
+- url
+- api
+- http
+- request
+- rest
+- endpoint
+steps:
+- 'Step 1: Identify the target URL, API endpoint, or data source required for the
+  task'
+- 'Step 2: For web fetching: use requests.get() or a web fetch tool. Check response.status_code
+  before processing'
+- 'Step 3: For API requests: use the correct HTTP method (GET, POST). Include authentication
+  headers if required (Bearer token, API key)'
+- 'Step 4: Parse the response: JSON with json.loads(), HTML with BeautifulSoup, XML
+  with ElementTree'
+- 'Step 5: For structured data extraction from HTML: use pandas.read_html() or BeautifulSoup
+  to find tables and key-value pairs'
+- 'Step 6: For planning tasks: break the project into phases, identify dependencies,
+  estimate effort for each phase'
+- 'Step 7: Write the extracted/planned content to the required output file in workspace/'
+- 'Step 8: Verify: check status_code, verify file exists, read back output to confirm
+  format'
+examples:
+- 'Correct: requests.get(url, headers={''Authorization'': ''Bearer token''}) → response.raise_for_status()
+  → data = response.json()'
+- 'Correct: pd.read_html(url)[0] to extract HTML tables directly into DataFrames'
+- 'Wrong: process response without checking response.status_code — error pages will
+  corrupt the output'
+compact: 'requests.get with status_code check — BeautifulSoup or pandas.read_html
+  for table scraping — project planning: phases, dependencies, Gantt-style breakdown'

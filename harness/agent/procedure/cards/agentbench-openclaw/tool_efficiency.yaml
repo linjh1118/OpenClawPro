@@ -1,0 +1,18 @@
+name: codebase_navigation
+description: Navigate and search large codebases efficiently — assess the goal first, then choose the most targeted approach
+trigger_keywords:
+  - "search"
+  - "locate"
+  - "large codebase"
+  - "find all"
+  - "find where"
+  - "review without modifying"
+steps:
+  - "Assess the task goal first — is it about finding, understanding, or modifying code?"
+  - "Use targeted search to narrow scope before deep reading"
+  - "Document findings with file paths and line references"
+  - "Verify you have found all relevant locations"
+examples:
+  - "Correct: assess the goal → choose the most efficient approach → document findings with references"
+  - "Correct: narrow scope with search → read only relevant files → report findings"
+compact: "Assess the goal first, then choose the most targeted approach — verify completeness"

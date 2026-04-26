@@ -1,0 +1,28 @@
+# T4a: Program Support Card - Configuration-Driven Visual Output
+# Domain: multimodal
+# Paper reference: T4a - Program Support Cards for skill availability
+
+- name: config_driven_visual_generation
+  description: Read configuration files and generate visual outputs (HTML pages, charts, dashboards) according to the specified parameters
+  domain: multimodal
+  program_goal: Correctly interpret configuration parameters and produce a visual output that faithfully implements the specification.
+  prerequisites:
+    - Identify and read all configuration files (JSON, YAML, XML)
+    - Understand the expected output format and rendering technology
+    - Know the file path where output should be saved
+  steps:
+    - "Step 1: Read and parse all configuration files; verify the JSON/YAML structure is valid"
+    - "Step 2: Extract all parameters: colors, sizes, labels, layout options, data values, timezone offsets"
+    - "Step 3: For HTML/Canvas output: determine the required elements (SVG, Canvas, HTML elements) based on the config"
+    - "Step 4: Map configuration parameters to visual properties: colors → fill/stroke, sizes → dimensions, labels → text elements"
+    - "Step 5: Implement the visual structure: create the base canvas, layout components, and rendering loop as specified"
+    - "Step 6: For time-based visuals: compute the correct display time from the configured timezone offset and current time"
+    - "Step 7: For multi-item outputs: iterate over all configured items and apply per-item styling from the config"
+    - "Step 8: Test by previewing the output; iteratively adjust until the visual matches the configuration specification"
+    - "Step 9: Save the final output to the specified file path; verify the file is created and non-empty"
+  common_pitfalls:
+    - "Invalid JSON/YAML parsing: Malformed config files cause silent failure; always validate structure first."
+    - "Missing default values: Configuration parameters may be optional; handle absent fields with sensible defaults."
+    - "Incorrect timezone conversion: Verify the offset direction (adding vs subtracting hours) matches the expected local time."
+    - "Color format mismatches: Config may use hex (#RRGGBB), named colors, or RGB tuples — normalize before applying."
+    - "Not testing the output: Always preview the generated file before finalizing to catch visual mismatches."

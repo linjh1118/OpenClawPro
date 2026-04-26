@@ -1,0 +1,47 @@
+name: clawbench_official_bioinformatics
+description: Bioinformatics tasks — DNA/RNA sequence analysis, FASTA file parsing,
+  GC content computation, ORF detection, phylogenetic analysis, genomic data processing
+  with BioPython
+trigger_keywords:
+- bioinformatics
+- genomic
+- protein
+- dna sequence
+- rna sequence
+- sequence analysis
+- fasta
+- fastq
+- biopython
+- gc content
+- orf detection
+- open reading frame
+- codon
+- nucleotide
+- amino acid
+- phylogenetic
+- sequence alignment
+- blast
+steps:
+- 'Step 1: Read the FASTA or FASTQ input file — understand whether it contains DNA,
+  RNA, or protein sequences'
+- 'Step 2: For sequence analysis: use BioPython (SeqIO) to parse sequences. Compute
+  GC content: (G+C)/(A+T+G+C) * 100'
+- 'Step 3: For ORF detection: find start codon ATG, scan forward in-frame for stop
+  codons (TAA, TAG, TGA), keep ORFs >= 100bp'
+- 'Step 4: For sequence alignment or similarity: use pairwise alignments, Smith-Waterman,
+  or BLAST-style heuristics'
+- 'Step 5: Handle both forward and reverse complement strands for DNA — always check
+  both directions'
+- 'Step 6: Write output as CSV with per-sequence metrics (ID, GC_content, ORF_count,
+  longest_ORF_length) or as FASTA for sequences'
+- 'Step 7: Verify: confirm output file exists, column headers match specification,
+  numeric values are biologically plausible'
+examples:
+- 'Correct: BioPython: from Bio import SeqIO; records = list(SeqIO.parse(''seqs.fasta'',
+  ''fasta'')); for r in records: gc = (r.seq.count(''G'')+r.seq.count(''C''))/len(r.seq)*100'
+- 'Correct: ORF: for i in range(0, len(seq)-2, 3): codon = seq[i:i+3]; if codon ==
+  ''ATG'': scan forward for in-frame stop codons'
+- 'Wrong: treat DNA and protein sequences the same — different alphabets and scoring
+  schemes apply'
+compact: 'Parse FASTA with BioPython SeqIO — GC content = (G+C)/(total) — ORF: ATG
+  start codon, in-frame stop (TAA/TAG/TGA), >=100bp — write per-sequence metrics CSV'

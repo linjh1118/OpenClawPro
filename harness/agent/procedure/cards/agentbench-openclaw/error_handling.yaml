@@ -1,0 +1,33 @@
+name: error_diagnosis_and_fix
+description: Diagnose, detect, and fix errors — reproduce errors directly, identify the underlying cause, apply targeted fixes, handle corrupted inputs gracefully instead of hallucinating results; when an input file is missing, corrupted, or malformed, report the specific problem explicitly rather than fabricating data or inventing content
+trigger_keywords:
+  - "silent failure"
+  - "debug"
+  - "error"
+  - "crash"
+  - "missing file"
+  - "does not exist"
+  - "not found"
+  - "corrupted"
+  - "data loss"
+  - "missing records"
+  - "malformed"
+  - "parse"
+  - "invalid"
+  - "broken"
+  - "hallucinate"
+  - "fabricate"
+  - "make up"
+steps:
+  - "Run the failing code directly to observe the actual error — do not assume you know the problem"
+  - "Diagnose the underlying cause by examining what went wrong in the actual execution"
+  - "For corrupted/malformed input: explicitly report what is wrong (missing brackets, unquoted keys, trailing commas, etc.) and choose how to proceed"
+  - "For missing or nonexistent files: report that the file is missing — do NOT fabricate or invent content from a file that does not exist"
+  - "Fix the actual source of the problem, not just the symptom — or document the corruption if it cannot be fixed"
+  - "Re-run after fixing to confirm the problem is resolved"
+examples:
+  - "Correct: reproduce the error → identify the cause → fix it → verify the fix works"
+  - "Correct: run the code → see what happens → address the real issue"
+  - "Correct: detect JSON corruption → report 'JSON is malformed: missing closing bracket' → attempt repair or work around"
+  - "Correct: required input file is missing → report error explicitly → do not make up data from a file that does not exist"
+compact: "Reproduce errors directly — identify the underlying cause — do not hallucinate or fabricate — report corruption or fix"

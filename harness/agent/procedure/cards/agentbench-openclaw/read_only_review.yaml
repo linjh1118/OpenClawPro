@@ -1,0 +1,24 @@
+name: read_only_file_review
+description: Review and analyze files without making modifications — read files carefully, identify factual errors or inconsistencies, report findings accurately, and preserve the original file unchanged; do not edit, rewrite, or "fix" anything unless explicitly asked
+trigger_keywords:
+  - "review"
+  - "report"
+  - "factual error"
+  - "inconsistency"
+  - "read only"
+  - "do not change"
+  - "do not modify"
+  - "don't change"
+  - "find errors"
+  - "check accuracy"
+  - "verify"
+steps:
+  - "Read the file completely to understand its full content"
+  - "Analyze the content for factual errors, inconsistencies, or problems"
+  - "Report findings clearly and specifically — quote the actual content when pointing out errors"
+  - "Do NOT modify the file or suggest rewrites unless explicitly asked"
+  - "Return a clear report of what you found, not a revised version"
+examples:
+  - "Correct: read report → identify factual inconsistencies → report 'the team grew from 9 to 14 but only 3 new hires are mentioned'"
+  - "Correct: read carefully → report errors without changing the file"
+compact: "Read file thoroughly — identify factual errors and inconsistencies — report findings without modifying"

@@ -1,0 +1,50 @@
+name: clawbench_official_real_tools
+description: Real tools and shell scripting tasks — git version control (clone, branch,
+  commit, merge, rebase), bash scripting, HTTP REST API calls, Docker, package installation
+  (pip, npm, conda)
+trigger_keywords:
+- git
+- git operations
+- bash
+- shell script
+- docker
+- curl
+- wget
+- rest api
+- http request
+- api endpoint
+- package manager
+- pip install
+- npm install
+- conda install
+- environment setup
+- build script
+- pipeline tool
+- subprocess
+steps:
+- 'Step 1: Read the task specification to understand what tool operations are required
+  (git commands, bash script logic, API endpoints)'
+- 'Step 2: For git operations: understand the sequence of operations (clone, branch,
+  commit, merge, rebase). Write a clean bash script that executes them in order'
+- 'Step 3: For bash scripts: use set -e (exit on error), set -u (undefined vars error),
+  add shebang #!/bin/bash. Handle errors gracefully'
+- 'Step 4: For API/HTTP tasks: use requests library. GET for fetching, POST for creating.
+  Always check response.status_code and handle JSON parsing errors'
+- 'Step 5: For environment setup: follow the specified package manager (pip, conda,
+  npm). Verify installation succeeded before proceeding'
+- 'Step 6: For file processing pipelines: chain tools with proper I/O redirection
+  or Python subprocess. Ensure each step''s output feeds the next'
+- 'Step 7: Write the bash script to the specified output path (workspace/). Do NOT
+  execute dangerous commands (rm -rf, chmod 777)'
+- 'Step 8: Verify: run ''bash script_name.sh'' in a dry-run or sandboxed environment
+  if available. Check all expected output files are created'
+examples:
+- 'Correct: git: git init; git add .; git commit -m ''message''; git branch feature;
+  git checkout feature'
+- 'Correct: API: requests.get(url, timeout=10) → raise_for_status() → response.json()'
+- 'Correct: bash: #!/bin/bash; set -e; set -u; echo ''starting...''; python process.py
+  < input.txt > output.txt'
+- 'Wrong: write a script without error handling — if one step fails, continue blindly
+  without catching the error'
+compact: 'Git: clone, branch, commit, merge, rebase — Bash: set -e -u with shebang
+  — HTTP: requests with status_code check — Docker: build and run containers'

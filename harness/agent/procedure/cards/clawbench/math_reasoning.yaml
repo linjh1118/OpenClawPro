@@ -1,0 +1,55 @@
+name: clawbench_official_math_reasoning
+description: Mathematical reasoning tasks — solve financial math problems (NPV, IRR,
+  compound interest), probability and statistics, equation solving, discrete math,
+  optimization
+trigger_keywords:
+- math
+- mathematics
+- financial math
+- probability
+- statistics
+- optimization
+- equation
+- solve
+- calculus
+- derivative
+- integral
+- permutation
+- combination
+- probability
+- expected value
+- variance
+- portfolio
+- option
+- bond
+- npv
+- irr
+- discount
+- compound
+- interest
+steps:
+- 'Step 1: Read all problem statements carefully — understand what is being asked
+  before starting calculations'
+- 'Step 2: For financial math (NPV, IRR, bond pricing, options): set up the equation,
+  identify knowns/unknowns, apply the correct formula'
+- 'Step 3: For probability/statistics: define the sample space, compute P(event) as
+  favorable/total outcomes, or use distribution formulas (normal, binomial, Poisson)'
+- 'Step 4: For equation solving: if analytical solution exists, derive it step by
+  step. If numerical (Newton-Raphson, bisection), implement with convergence check'
+- 'Step 5: For optimization: identify the objective function, constraints, then use
+  appropriate method (gradient descent, LP, etc.)'
+- 'Step 6: Compute answers to sufficient precision — financial math usually requires
+  2-6 decimal places, scientific math may need more'
+- 'Step 7: Write results as JSON with fields: problem_index, answer, explanation (brief
+  derivation of the key steps)'
+- 'Step 8: Verify each answer by plugging back in or comparing against a known special
+  case'
+examples:
+- 'Correct: NPV = sum(C_t / (1+r)^t for t in range(1, N+1)) - C_0; IRR: find r where
+  NPV=0 (use scipy.optimize.brentq)'
+- 'Correct: probability = favorable_outcomes / total_outcomes; for compound: P(A and
+  B) = P(A) * P(B|A)'
+- 'Wrong: use float for financial math without rounding — always round to the required
+  decimal places'
+compact: Solve math problems from problem JSON — apply formulas (NPV, IRR, probability)
+  — output structured JSON with answer and explanation

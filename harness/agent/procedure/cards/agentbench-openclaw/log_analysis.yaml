@@ -1,0 +1,26 @@
+name: log_and_event_analysis
+description: Parse and analyze log files and timestamped events — extract entries, build event sequences, identify patterns
+trigger_keywords:
+  - "log"
+  - "event"
+  - "timestamp"
+  - "trace"
+  - "error log"
+  - "incident"
+  - "hallucinate"
+  - "fabricate"
+  - "make up"
+  - "missing file"
+  - "does not exist"
+  - "not found"
+steps:
+  - "Read log files to understand their format and content"
+  - "Parse entries by type and timestamp"
+  - "Build a chronological picture of events"
+  - "Identify the source or cause of issues"
+  - "When a referenced log file does not exist at the expected path: report the missing file explicitly — do NOT fabricate or create fake log data"
+  - "Search common alternative locations if the file is not found at first location — do not hallucinate content to replace a missing file"
+examples:
+  - "Correct: read logs → parse by timestamp → identify patterns → report findings"
+  - "Correct: understand event sequence → determine what caused the issue"
+compact: "Parse log and event data — build chronological sequence — identify the source of issues"

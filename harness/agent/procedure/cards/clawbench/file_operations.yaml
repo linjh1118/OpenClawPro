@@ -1,0 +1,47 @@
+name: clawbench_official_file_operations
+description: Text editing and file operations — line wrapping at character limits, whitespace
+  normalization and punctuation spacing, extract table of contents from markdown documents,
+  parse and extract structured content from text files, batch file processing, format
+  conversion (CSV to Markdown, JSON to YAML), directory structure creation, text
+  substitution across multiple files
+trigger_keywords:
+- batch file
+- batch process
+- format conversion
+- directory structure
+- multiple files
+- text substitution
+- find and replace
+- glob pattern
+- walk directory
+- mkdir
+- file encoding
+- csv to
+- json to
+- markdown table
+- text file
+steps:
+- 'Step 1: Read all input files first — understand the format, encoding, and structure
+  before making any changes'
+- 'Step 2: Identify the operation needed: batch process multiple files, convert between
+  formats, build directory structure, or find-and-replace across files'
+- 'Step 3: For text processing: handle encoding carefully. Try UTF-8 first, then latin-1
+  as fallback for non-ASCII characters'
+- 'Step 4: For format conversion: identify source and target format. Use appropriate
+  libraries (pandas for CSV/Excel, python-docx for Word, reportlab for PDF)'
+- 'Step 5: For batch operations: use glob.glob() or os.walk() to process files in
+  a loop. Create output files with correct names and paths'
+- 'Step 6: Write the output file to the exact path specified in the task (not /root/,
+  use the workspace directory)'
+- 'Step 7: Verify the output: run ''ls workspace/'' and confirm all expected files
+  exist with correct content'
+- 'Step 8: For document editing: use the appropriate library (python-docx for .docx,
+  reportlab for PDF, or direct XML for OOXML formats)'
+examples:
+- 'Correct: glob.glob(''workspace/*.txt'') → for f in files: content = read(f); write(out_dir/f,
+  result)'
+- 'Correct: for encoding: content = open(f, encoding=''utf-8'', errors=''replace'').read()'
+- 'Wrong: create output files in /root/ instead of workspace/ — grading code cannot
+  access /root/'
+compact: Batch process files with glob/walk — convert between CSV, JSON, YAML formats
+  — create directory structures — verify all output files in workspace/

@@ -1,0 +1,26 @@
+name: project_scaffolding_and_file_operations
+description: Project scaffolding and file organization tasks — create directory structures, build project templates, organize files
+trigger_keywords:
+  - "directory"
+  - "structure"
+  - "project"
+  - "gitignore"
+  - "mkdir"
+  - "create"
+  - "src"
+  - "package"
+  - "tests"
+  - "install"
+  - "CLI"
+  - "tool"
+  - "template"
+  - "scaffold"
+steps:
+  - "Understand the required structure from the task description"
+  - "Create directories first, then files — the order matters"
+  - "Use standard conventions for the relevant language or framework"
+  - "Verify the complete structure was created successfully"
+examples:
+  - "Correct: create directories first → then write files into them"
+  - "Correct: verify structure with directory listing"
+compact: "Create directories before files — verify structure is complete"

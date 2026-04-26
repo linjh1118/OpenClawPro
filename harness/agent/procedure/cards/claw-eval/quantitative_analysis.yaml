@@ -1,0 +1,25 @@
+# T4a: Program Support Card - Quantitative Analysis
+# Domain: quantitative
+# Assessment dimension: numerical (35% weight - highest)
+
+- name: quantitative_analysis
+  description: >
+    quantitative technical analysis method: statistical distribution analysis,
+    probability estimation using computation tools, parameter calculation
+    based on observed data patterns, percentile analysis,
+    numerical computation for technical decisions
+  domain: quantitative
+  program_goal: Support technical decisions with quantitative data and statistically-grounded recommendations
+  prerequisites:
+    - Ability to use calculation tools for numerical computation
+    - Understanding of basic statistical distributions (normal, lognormal, empirical)
+    - Ability to translate business requirements into numerical constraints
+  steps:
+    - "Step 1: Identify what numerical parameters and values are needed for the analysis"
+    - "Step 2: Use appropriate tools to calculate or estimate numerical values"
+    - "Step 3: Provide quantitative evidence supporting the recommended approach"
+    - "Step 4: Present the reasoning chain from data to conclusion with numerical support"
+  common_pitfalls:
+    - "Not performing any numerical analysis: This dimension has 35% weight, qualitative answers score at most 0.4."
+    - "Failing to provide numerical evidence: Always include estimates or calculations when applicable."
+    - "Presenting numbers without explaining methodology: Show the calculation approach."

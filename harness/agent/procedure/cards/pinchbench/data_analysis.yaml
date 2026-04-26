@@ -1,0 +1,25 @@
+name: data_analysis_and_statistics
+description: Data analysis tasks — analyze tabular data, compute statistics, create summaries from data files
+trigger_keywords:
+  - "csv"
+  - "excel"
+  - "spreadsheet"
+  - "analysis"
+  - "data"
+  - "analyze"
+  - "statistics"
+  - "revenue"
+  - "expense"
+  - "sales"
+  - "profit"
+  - "xlsx"
+  - "workbook"
+steps:
+  - "Read all input data files before performing any analysis"
+  - "Inspect the data structure: column names, types, and shape"
+  - "Compute required statistics using appropriate aggregation methods"
+  - "Present findings clearly with supporting evidence from the data"
+examples:
+  - "Correct: read data file → inspect structure → compute statistics → write clear summary"
+  - "Correct: aggregate by category → compute totals/averages → report findings"
+compact: "Read data files first — analyze and present findings clearly"

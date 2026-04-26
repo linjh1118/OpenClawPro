@@ -1,0 +1,24 @@
+# T4a: Program Support Card - Technical Solution Design
+# Domain: technical_solution
+# Assessment dimension: content (30% weight)
+
+- name: technical_solution_design
+  description: >
+    comprehensive technical solution framework: root cause diagnosis,
+    solution comparison with trade-offs, prioritized recommendations,
+    implementation guidance with specific parameters, code examples
+  domain: technical_solution
+  program_goal: Provide complete, professional, and actionable technical solutions
+  prerequisites:
+    - Root cause diagnosis has been completed
+    - Understanding of trade-offs between different solution approaches
+    - Ability to assess impact on existing systems
+  steps:
+    - "Step 1: State the confirmed root cause diagnosis clearly"
+    - "Step 2: Present feasible solution approaches with pros and cons"
+    - "Step 3: Provide prioritized recommendation with specific parameters or code"
+    - "Step 4: Include implementation considerations and potential risks"
+  common_pitfalls:
+    - "Giving solutions without explaining reasoning: Users need to understand why."
+    - "Listing all solutions without prioritization: Leave user unable to decide."
+    - "Providing theoretical but non-specific guidance: Give actionable parameters and code."

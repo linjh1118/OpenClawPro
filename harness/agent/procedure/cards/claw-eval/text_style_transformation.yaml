@@ -1,0 +1,26 @@
+# T4a: Program Support Card - Text Style Transformation
+# Domain: content
+# Paper reference: T4a - Program Support Cards for skill availability
+
+- name: text_style_transformation
+  description: Transform text from one style to another while preserving core meaning, key information, and logical structure
+  domain: content
+  program_goal: Rewrite existing text into a target style (e.g., formal to conversational, AI-generated to human-written, technical to accessible) without losing the original meaning or important details.
+  prerequisites:
+    - Have the source text available and fully read
+    - Understand the target style requirements (voice, tone, audience level, formality)
+    - Identify the key information and structure that must be preserved
+  steps:
+    - "Step 1: Read and fully understand the source text; identify the core message, key facts, and logical structure"
+    - "Step 2: Identify the target style characteristics: formality level, vocabulary complexity, sentence rhythm, transition patterns, audience expectations"
+    - "Step 3: Create a structural outline of the content: main points, supporting details, examples, recommendations — what must be kept"
+    - "Step 4: Rewrite the content in the target style, mapping each key point to the new voice and tone"
+    - "Step 5: Remove or replace style markers that conflict with the target (e.g., \"Furthermore\", \"It is important to note\" for humanized writing; overly casual language for formal writing)"
+    - "Step 6: Preserve technical accuracy: ensure all factual content, numbers, and references are accurately carried over"
+    - "Step 7: Read the rewritten text and verify it flows naturally in the target style and all critical information is retained"
+  common_pitfalls:
+    - "Altering meaning while changing style: Style changes should be surface-level; core facts must remain accurate."
+    - "Over-sanitizing: Removing stylistic markers does not mean removing substantive content."
+    - "Inconsistent voice: Once a tone is adopted, maintain it throughout — do not oscillate between formal and casual."
+    - "Dropping key details: Each piece of advice, each data point, each recommendation from the source must appear in the rewrite."
+    - "Introducing new content: Do not add opinions, examples, or information not present in the source text."
