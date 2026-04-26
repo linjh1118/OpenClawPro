@@ -61,20 +61,17 @@ class DenseRetriever:
         logger.info(f"[DenseRetriever] Model loaded on device: {self.retrieval_cfg.device}")
 
     def _build_card_text(self, card: SkillCard) -> str:
-        """Build a dense text representation of a skill card for embedding."""
+        """Build a dense text representation of a skill card for embedding.
+
+        Uses only description + name prefix for clean semantic signal.
+        Steps are intentionally excluded to avoid template noise (Step 1/2/3...)
+        that dilutes description-level semantic matching.
+        """
         parts = []
         if card.name:
             parts.append(f"Name: {card.name}")
         if card.description:
-            parts.append(f"Description: {card.description}")
-        if card.program_goal:
-            parts.append(f"Goal: {card.program_goal}")
-        if card.prerequisites:
-            parts.append(f"Prerequisites: {'; '.join(card.prerequisites)}")
-        if card.steps:
-            parts.append(f"Steps: {' | '.join(card.steps)}")
-        if card.common_pitfalls:
-            parts.append(f"Pitfalls: {' | '.join(card.common_pitfalls)}")
+            parts.append(card.description)
         return " [SEP] ".join(parts)
 
     def index_cards(self, cards: List[SkillCard]) -> None:

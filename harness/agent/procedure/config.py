@@ -95,6 +95,8 @@ class RetrievalConfig:
     batch_size: int = 16
     # Whether to use cache for embeddings
     cache_embeddings: bool = True
+    # Minimum similarity score threshold — cards below this score are not injected
+    score_threshold: float = 0.35
 
 
 @dataclass
@@ -196,6 +198,7 @@ class ProceduralConfig:
                     "top_k": self.program_support.retrieval.top_k,
                     "batch_size": self.program_support.retrieval.batch_size,
                     "cache_embeddings": self.program_support.retrieval.cache_embeddings,
+                    "score_threshold": self.program_support.retrieval.score_threshold,
                 },
                 "domain_card_sets": self.program_support.domain_card_sets,
                 "use_keyword_fallback": self.program_support.use_keyword_fallback,
@@ -228,6 +231,7 @@ class ProceduralConfig:
             top_k=retrieval_data.get("top_k", 3),
             batch_size=retrieval_data.get("batch_size", 16),
             cache_embeddings=retrieval_data.get("cache_embeddings", True),
+            score_threshold=retrieval_data.get("score_threshold", 0.35),
         )
 
         program_support = ProgramSupportConfig(

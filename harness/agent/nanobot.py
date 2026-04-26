@@ -820,8 +820,11 @@ class NanoBotAgent(BaseAgent):
                     messages.insert(insert_idx, skill_act_msg)
                     self._logger.info("[T4b] Skill activation prompt injected at task start")
 
-                # T4a: Retrieve program support cards via dense retrieval
-                if self._procedural_config.program_support.enabled:
+                # T4a: Retrieve program support cards via dense retrieval (once, at iteration 1)
+                if (
+                    iteration == 1
+                    and self._procedural_config.program_support.enabled
+                ):
                     # Build context from recent messages
                     context_for_trigger = ""
                     for msg in reversed(messages[-10:]):
@@ -836,25 +839,33 @@ class NanoBotAgent(BaseAgent):
                         domain=domain,
                     )
                     if retrieved:
-                        cards = [card for card, score, _ in retrieved]
-                        top_score = retrieved[0][1] if retrieved else 0.0
-                        self._logger.info(
-                            f"[T4a] Retrieved {len(cards)} program support cards "
-                            f"(top score: {top_score:.4f})"
-                        )
-                        # Format and inject
-                        procedure_context = self._procedural_expander.format_multiple(cards)
-                        procedure_msg = {"role": "system", "content": procedure_context}
-                        # Find insertion point: after skill activation prompt if present
-                        insert_idx = 1
-                        for i, msg in enumerate(messages):
-                            if msg.get("role") == "system" and "Skill Activation" in msg.get("content", ""):
-                                insert_idx = i + 1
-                                break
-                            if msg.get("role") == "system" and "memory" in msg.get("content", "").lower():
-                                insert_idx = i + 1
-                                break
-                        messages.insert(insert_idx, procedure_msg)
+                        # Apply score threshold filter
+                        threshold = self._procedural_config.program_support.retrieval.score_threshold
+                        filtered = [
+                            (card, score, matched)
+                            for card, score, matched in retrieved
+                            if score >= threshold
+                        ]
+                        if filtered:
+                            cards = [card for card, score, _ in filtered]
+                            top_score = filtered[0][1]
+                            self._logger.info(
+                                f"[T4a] Retrieved {len(cards)} cards (top score: {top_score:.4f}, "
+                                f"threshold: {threshold})"
+                            )
+                            # Format and inject
+                            procedure_context = self._procedural_expander.format_multiple(cards)
+                            procedure_msg = {"role": "system", "content": procedure_context}
+                            # Find insertion point: after skill activation prompt if present
+                            insert_idx = 1
+                            for i, msg in enumerate(messages):
+                                if msg.get("role") == "system" and "Skill Activation" in msg.get("content", ""):
+                                    insert_idx = i + 1
+                                    break
+                                if msg.get("role") == "system" and "memory" in msg.get("content", "").lower():
+                                    insert_idx = i + 1
+                                    break
+                            messages.insert(insert_idx, procedure_msg)
 
             # T3: Collaboration - planner_executor uses planner for initial plan and bounded revisions.
             if self._collab_config.enabled and self._handoff_manager:

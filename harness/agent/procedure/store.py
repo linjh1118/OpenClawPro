@@ -50,13 +50,17 @@ class ProceduralStore:
             return
 
         loaded_count = 0
-        for file_path in cards_path.glob("*.yaml"):
+        for file_path in cards_path.rglob("*.yaml"):
+            if "__pycache__" in file_path.parts:
+                continue
             cards = self._load_from_file(file_path)
             for card in cards:
                 self._add_card(card)
                 loaded_count += 1
 
-        for file_path in cards_path.glob("*.json"):
+        for file_path in cards_path.rglob("*.json"):
+            if "__pycache__" in file_path.parts:
+                continue
             if file_path.name.endswith(".skill.json"):
                 continue
             cards = self._load_from_file(file_path)
