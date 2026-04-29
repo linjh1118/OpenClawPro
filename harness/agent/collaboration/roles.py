@@ -513,17 +513,23 @@ Next action: {description of next subtask or "TASK_COMPLETE"}
                 "subtask": subtask,
             }
 
-    async def synthesize_and_decide(
+    async def plan_next(
         self,
         subtask_result: Dict[str, Any],
-        remaining_subtasks: List[Dict[str, Any]],
+        original_task: str,
+        completed_subtasks: List[Dict[str, Any]],
         overall_context: str | None = None,
         iteration: int = 0,
     ) -> Dict[str, Any]:
-        """Synthesize executor result and decide next action.
+        """Dynamically plan the next step based on executor result.
+
+        This is the core of iterative Commander-Executor flow:
+        - Commander analyzes what the executor accomplished
+        - Commander can create NEW subtasks dynamically based on results
+        - Commander decides to continue with new work or declare task complete
 
         Returns:
-            Dict with "decision" (str), "next_subtask" (Dict | None), "is_complete" (bool)
+            Dict with "next_subtask" (Dict | None), "is_complete" (bool), "action" (str)
         """
         self._completed_subtasks.append(subtask_result)
 
@@ -531,63 +537,165 @@ Next action: {description of next subtask or "TASK_COMPLETE"}
             {"role": "system", "content": self.system_prompt},
         ]
 
-        user_content = "## Completed Subtask Result\n"
+        # Build comprehensive context for planning
+        user_content = f"## Original Task\n{original_task}\n\n"
+
+        if completed_subtasks:
+            user_content += "## Completed Subtasks\n"
+            for i, st in enumerate(completed_subtasks, 1):
+                user_content += f"\n{i}. {st.get('description', 'N/A')}\n"
+                user_content += f"   Result: {st.get('result', 'N/A')[:500]}\n"
+                if st.get('error'):
+                    user_content += f"   Error: {st['error']}\n"
+            user_content += "\n"
+
+        user_content += "## Latest Subtask Result\n"
         user_content += f"Subtask {subtask_result.get('subtask_id', '?')}: {subtask_result.get('description', '')}\n"
         user_content += f"Result: {subtask_result.get('result', '')}\n"
         if subtask_result.get('error'):
             user_content += f"Error: {subtask_result['error']}\n"
 
-        if remaining_subtasks:
-            user_content += f"\n## Remaining Subtasks ({len(remaining_subtasks)} left)\n"
-            for st in remaining_subtasks[:3]:
-                user_content += f"- Subtask {st.get('id', '?')}: {st.get('description', '')}\n"
-            if len(remaining_subtasks) > 3:
-                user_content += f"... and {len(remaining_subtasks) - 3} more\n"
-
         if overall_context:
-            user_content += f"\n## Overall Context\n{overall_context}\n"
+            user_content += f"\n## Additional Context\n{overall_context}\n"
 
-        user_content += "\n\nBased on the completed subtask result, should we continue with the next subtask, modify the plan, or declare completion?"
+        user_content += """
+## Planning Decision
+
+Based on the executor's result, decide what to do next:
+
+1. If the task is COMPLETED: Output [TASK_COMPLETE] with brief final summary
+2. If more work is needed: Output [DISPATCH] with a NEW subtask in this format:
+
+[DISPATCH]
+Subtask: {clear description of what executor should do next}
+Expected output: {what this subtask should produce}
+Success criteria: {how to verify completion}
+[/DISPATCH]
+
+Important:
+- Create NEW subtasks dynamically based on what actually happened, not predefined steps
+- If executor took a wrong path, create a corrective subtask
+- If executor missed parts, create a supplemental subtask
+- Be specific and actionable in subtask descriptions"""
         messages.append({"role": "user", "content": user_content})
 
         try:
-            response = await self._llm_call(messages, model=self.model, max_tokens=1024)
+            response = await self._llm_call(messages, model=self.model, max_tokens=1536)
             content = ""
             if hasattr(response, "choices") and response.choices:
                 content = response.choices[0].message.content or ""
 
-            # Parse decision
-            is_complete = "TASK_COMPLETE" in content.upper() or "COMPLETE" in content.upper()
-            next_subtask = remaining_subtasks[0] if remaining_subtasks and not is_complete else None
+            # Parse the response
+            is_complete = "[TASK_COMPLETE]" in content.upper() or "TASK_COMPLETE" in content.upper()
+            new_subtask = None if is_complete else self._parse_new_subtask(content)
+
+            if new_subtask:
+                new_subtask["id"] = len(self._completed_subtasks) + 1
+                logger.info(f"[CommanderRole] Created new subtask: {new_subtask.get('description', '')[:50]}...")
+                action = "dispatch"
+            elif is_complete:
+                logger.info("[CommanderRole] Task declared complete")
+                action = "complete"
+            else:
+                # Fallback: try to extract any subtask-like content
+                logger.warning("[CommanderRole] No clear dispatch or complete signal, requesting clarification")
+                action = "retry"
 
             event = CollabEvent(
-                event_type="synthesis_complete",
+                event_type="plan_next",
                 role="commander",
                 iteration=iteration,
                 data={
-                    "decision": "continue" if next_subtask else "complete",
+                    "action": action,
+                    "is_complete": is_complete,
+                    "has_new_subtask": new_subtask is not None,
                     "completed_count": len(self._completed_subtasks),
-                    "remaining_count": len(remaining_subtasks),
-                    "raw_response": content[:300],
+                    "raw_response": content[:500],
                 },
             )
             self._events.append(event)
 
             return {
-                "decision": "continue" if next_subtask else "complete",
-                "next_subtask": next_subtask,
+                "next_subtask": new_subtask,
                 "is_complete": is_complete,
+                "action": action,
                 "synthesis": content,
             }
 
         except Exception as e:
-            logger.error(f"[CommanderRole] Synthesis failed: {e}")
+            logger.error(f"[CommanderRole] Planning failed: {e}")
             return {
-                "decision": "complete" if not remaining_subtasks else "continue",
-                "next_subtask": remaining_subtasks[0] if remaining_subtasks else None,
-                "is_complete": not remaining_subtasks,
-                "synthesis": f"Synthesis failed: {e}",
+                "next_subtask": None,
+                "is_complete": True,  # On error, try to complete
+                "action": "error",
+                "synthesis": f"Planning failed: {e}",
             }
+
+    def _parse_new_subtask(self, content: str) -> Dict[str, Any] | None:
+        """Parse a new subtask from DISPATCH block in content.
+
+        Returns:
+            Dict with "description", "expected_output", "success_criteria" or None
+        """
+        import re
+
+        # Look for DISPATCH block
+        dispatch_pattern = r'\[DISPATCH\](.*?)\[/DISPATCH\]'
+        match = re.search(dispatch_pattern, content, re.DOTALL | re.IGNORECASE)
+
+        if not match:
+            # Try alternative format without closing tag
+            if "[DISPATCH]" in content.upper():
+                lines = content.split('\n')
+                description = ""
+                for line in lines:
+                    line = line.strip()
+                    if line.startswith("Subtask:") or line.startswith("任务:"):
+                        description = line.split(":", 1)[1].strip()
+                        break
+                if description:
+                    return {
+                        "description": description,
+                        "expected_output": "",
+                        "success_criteria": "",
+                    }
+            return None
+
+        dispatch_content = match.group(1).strip()
+
+        # Parse fields
+        result = {"description": "", "expected_output": "", "success_criteria": ""}
+
+        lines = dispatch_content.split('\n')
+        current_field = "description"
+
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            # Check for field headers (flexible matching)
+            lower_line = line.lower()
+            # Match "Subtask:" or "Subtask N:" where N is a number
+            if lower_line.startswith("subtask") and ":" in line:
+                current_field = "description"
+                # Extract after colon, handling "Subtask 2:" or "Subtask:" formats
+                parts = line.split(":", 1)
+                if len(parts) > 1:
+                    result[current_field] = parts[1].strip()
+            elif lower_line.startswith("expected output:") or lower_line.startswith("expected:") or lower_line.startswith("输出:"):
+                current_field = "expected_output"
+                result[current_field] = line.split(":", 1)[1].strip()
+            elif lower_line.startswith("success criteria:") or lower_line.startswith("完成标准:") or lower_line.startswith("验证:"):
+                current_field = "success_criteria"
+                result[current_field] = line.split(":", 1)[1].strip()
+            elif "description" in current_field and result[current_field]:
+                # Continuation line for description
+                result[current_field] += " " + line
+
+        if result["description"]:
+            return result
+        return None
 
     async def generate_final_synthesis(
         self,

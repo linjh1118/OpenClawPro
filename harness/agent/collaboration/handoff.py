@@ -320,8 +320,14 @@ Instructions:
     ) -> Dict[str, Any]:
         """Execute the commander-executor collaboration flow (T3b).
 
-        Commander decomposes task into subtasks and dispatches them to Executor.
-        This provides proactive goal grounding (A段断裂修复) through explicit task decomposition.
+        Commander dynamically creates and dispatches subtasks to Executor in an
+        iterative loop. After each executor result, Commander can:
+        - Create a NEW subtask based on execution results
+        - Continue with implicit next step
+        - Declare the task complete
+
+        This provides proactive goal grounding (A段断裂修复) through dynamic
+        task decomposition rather than predefined static planning.
 
         Returns:
             Dict with "success", "result", "events", "iterations"
@@ -333,18 +339,21 @@ Instructions:
         all_events: List[CollabEvent] = []
         all_results: List[Dict[str, Any]] = []
 
-        # Step 1: Commander decomposes the task
+        # Step 1: Commander decomposes the task and generates initial subtask(s)
         decompose_result = await self.commander.decompose_task(task, context=initial_context, iteration=iteration)
         all_events.extend(self.commander.get_events())
         iteration += 1
 
-        subtasks = decompose_result.get("subtasks", [])
-        if not subtasks:
-            return {
-                "success": False,
-                "result": "Commander failed to decompose task",
-                "events": all_events,
-                "iterations": iteration,
+        current_subtask = None
+        if decompose_result.get("subtasks"):
+            # Use first subtask from decomposition
+            current_subtask = decompose_result["subtasks"][0]
+        else:
+            # Fallback: create a basic subtask
+            current_subtask = {
+                "id": 1,
+                "description": task,
+                "expected_output": "final result",
             }
 
         # Build context from completed subtasks
@@ -356,24 +365,20 @@ Instructions:
                 ctx += f"\n[Subtask {r.get('subtask_id', '?')} completed]: {r.get('result', '')}"
             return ctx
 
-        # Step 2: Execute subtasks iteratively
-        while subtasks and self.can_handoff():
-            current_subtask = subtasks[0]
+        # Step 2: Iterative execution loop - Commander dynamically creates subtasks
+        while self.can_handoff():
+            if current_subtask is None:
+                break
 
-            # Commander dispatches to executor
-            dispatch_result = await self.commander.dispatch_next(current_subtask, context=build_context(), iteration=iteration)
-            all_events.extend(self.commander.get_events())
-            iteration += 1
-
-            dispatch_message = dispatch_result.get("dispatch_message", current_subtask.get("description", ""))
+            subtask_id = current_subtask.get("id", len(all_results) + 1)
 
             # Record handoff from commander to executor
-            self.record_handoff("commander", "executor", "subtask_dispatch", iteration, subtask_id=current_subtask.get("id"))
+            self.record_handoff("commander", "executor", "subtask_dispatch", iteration, subtask_id=subtask_id)
 
             # Execute the subtask
             step = {
-                "step": current_subtask.get("id", 1),
-                "description": dispatch_message,
+                "step": subtask_id,
+                "description": current_subtask.get("description", ""),
                 "action": "continue",
             }
             exec_result = await self.executor.execute_step(step, context=build_context(), iteration=iteration)
@@ -382,7 +387,7 @@ Instructions:
 
             # Record result
             subtask_record = {
-                "subtask_id": current_subtask.get("id", 1),
+                "subtask_id": subtask_id,
                 "description": current_subtask.get("description", ""),
                 "result": exec_result.get("result", ""),
                 "error": exec_result.get("error"),
@@ -391,30 +396,37 @@ Instructions:
             all_results.append(subtask_record)
 
             # Record handoff from executor back to commander
-            self.record_handoff("executor", "commander", "subtask_complete", iteration, subtask_id=current_subtask.get("id"))
+            self.record_handoff("executor", "commander", "subtask_complete", iteration, subtask_id=subtask_id)
 
-            # Remove completed subtask
-            subtasks = subtasks[1:]
+            self._handoff_count += 1
 
-            # If we have more subtasks, ask commander to synthesize and decide
-            if subtasks:
-                self._handoff_count += 1
-                decision_result = await self.commander.synthesize_and_decide(
-                    subtask_record,
-                    subtasks,
-                    overall_context=build_context(),
-                    iteration=iteration,
-                )
-                all_events.extend(self.commander.get_events())
-                iteration += 1
+            # Step 3: Commander dynamically plans next step based on result
+            plan_result = await self.commander.plan_next(
+                subtask_record,
+                original_task=task,
+                completed_subtasks=all_results,
+                overall_context=build_context(),
+                iteration=iteration,
+            )
+            all_events.extend(self.commander.get_events())
+            iteration += 1
 
-                if decision_result.get("is_complete"):
-                    break
+            if plan_result.get("is_complete"):
+                # Task declared complete by commander
+                break
 
-                # Update remaining subtasks if commander modified plan
-                # (current implementation keeps original order)
+            # Get next subtask (may be newly created by commander)
+            current_subtask = plan_result.get("next_subtask")
 
-        # Step 3: Commander generates final synthesis
+            # Sanity check: if no next subtask and not complete, create a fallback
+            if current_subtask is None and not plan_result.get("is_complete"):
+                logger.warning("[HandoffManager] Commander returned no next_subtask and not complete, creating fallback")
+                current_subtask = {
+                    "id": subtask_id + 1,
+                    "description": f"Continue task execution after: {subtask_record.get('description', '')[:100]}",
+                }
+
+        # Step 4: Commander generates final synthesis
         final_result = await self.commander.generate_final_synthesis(task, all_results, iteration=iteration)
         all_events.extend(self.commander.get_events())
         iteration += 1

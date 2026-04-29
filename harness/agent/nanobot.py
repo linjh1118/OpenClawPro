@@ -876,34 +876,28 @@ class NanoBotAgent(BaseAgent):
                 ctx += f"\n[Subtask {r.get('subtask_id', '?')} completed]: {r.get('result', '')}"
             return ctx if ctx else None
 
-        # Step 2: Execute subtasks iteratively
-        while subtasks and self._handoff_manager.can_handoff():
-            current_subtask = subtasks[0]
+        # Step 2: Dynamic iterative execution - Commander creates subtasks on-the-fly
+        current_subtask = subtasks[0] if subtasks else None
 
-            # Commander dispatches to executor
-            dispatch_result = await self._commander_role.dispatch_next(
-                current_subtask,
-                context=build_context(),
-                iteration=iteration,
-            )
-            self._consume_role_events()
-            iteration += 1
+        while self._handoff_manager.can_handoff():
+            if current_subtask is None:
+                break
 
-            dispatch_message = dispatch_result.get("dispatch_message", current_subtask.get("description", ""))
+            subtask_id = current_subtask.get("id", len(all_results) + 1)
 
             # Record handoff from commander to executor
             handoff_event = self._handoff_manager.record_handoff(
                 "commander", "executor", "subtask_dispatch",
-                iteration, subtask_id=current_subtask.get("id"),
+                iteration, subtask_id=subtask_id,
             )
             self._record_collab_events([handoff_event], register_manager=False)
 
-            self._logger.info(f"[Collab-CmdExe] Dispatching subtask {current_subtask.get('id')}: {current_subtask.get('description', '')[:50]}...")
+            self._logger.info(f"[Collab-CmdExe] Dispatching subtask {subtask_id}: {current_subtask.get('description', '')[:80]}...")
 
             # Execute the subtask
             step = {
-                "step": current_subtask.get("id", 1),
-                "description": dispatch_message,
+                "step": subtask_id,
+                "description": current_subtask.get("description", ""),
                 "action": "continue",
             }
             exec_result = await self._executor_role.execute_step(step, context=build_context(), iteration=iteration)
@@ -912,7 +906,7 @@ class NanoBotAgent(BaseAgent):
 
             # Record result
             subtask_record = {
-                "subtask_id": current_subtask.get("id", 1),
+                "subtask_id": subtask_id,
                 "description": current_subtask.get("description", ""),
                 "result": exec_result.get("result", ""),
                 "error": exec_result.get("error"),
@@ -923,28 +917,37 @@ class NanoBotAgent(BaseAgent):
             # Record handoff from executor back to commander
             handoff_event = self._handoff_manager.record_handoff(
                 "executor", "commander", "subtask_complete",
-                iteration, subtask_id=current_subtask.get("id"),
+                iteration, subtask_id=subtask_id,
             )
             self._record_collab_events([handoff_event], register_manager=False)
 
-            # Remove completed subtask
-            subtasks = subtasks[1:]
+            self._handoff_manager._handoff_count += 1
 
-            # If we have more subtasks, ask commander to synthesize and decide
-            if subtasks:
-                self._handoff_manager._handoff_count += 1
-                decision_result = await self._commander_role.synthesize_and_decide(
-                    subtask_record,
-                    subtasks,
-                    overall_context=build_context(),
-                    iteration=iteration,
-                )
-                self._consume_role_events()
-                iteration += 1
+            # Step 3: Commander dynamically plans next step based on execution result
+            plan_result = await self._commander_role.plan_next(
+                subtask_record,
+                original_task=current_task,
+                completed_subtasks=all_results,
+                overall_context=build_context(),
+                iteration=iteration,
+            )
+            self._consume_role_events()
+            iteration += 1
 
-                if decision_result.get("is_complete"):
-                    self._logger.info("[Collab-CmdExe] Commander signaled early completion")
-                    break
+            if plan_result.get("is_complete"):
+                self._logger.info("[Collab-CmdExe] Commander signaled task complete")
+                break
+
+            # Get next subtask (may be newly created by Commander dynamically)
+            current_subtask = plan_result.get("next_subtask")
+
+            # Sanity check: if no next subtask and not complete, create fallback
+            if current_subtask is None and not plan_result.get("is_complete"):
+                self._logger.warning("[Collab-CmdExe] No next subtask from commander, creating fallback")
+                current_subtask = {
+                    "id": subtask_id + 1,
+                    "description": f"Continue task execution after: {subtask_record.get('description', '')[:100]}",
+                }
 
         # Step 3: Commander generates final synthesis
         self._logger.info(f"[Collab-CmdExe] Generating final synthesis ({len(all_results)} subtasks completed)")
