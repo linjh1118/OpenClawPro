@@ -6,7 +6,7 @@ Provides lightweight two-agent collaboration (planner-executor or executor-verif
 
 from .config import CollabConfig, HandoffPolicy, RoleDefinition
 from .event import CollabEvent
-from .roles import PlannerRole, ExecutorRole, VerifierRole
+from .roles import PlannerRole, ExecutorRole, VerifierRole, CommanderRole
 from .handoff import HandoffManager
 
 __all__ = [
@@ -17,6 +17,7 @@ __all__ = [
     "PlannerRole",
     "ExecutorRole",
     "VerifierRole",
+    "CommanderRole",
     "HandoffManager",
     "get_collab_summary",
 ]

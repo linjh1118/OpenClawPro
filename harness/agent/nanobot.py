@@ -26,8 +26,9 @@ import litellm
 from litellm import acompletion
 from .base import AgentResult, BaseAgent
 from .memory import MemoryConfig, EpisodicMemoryStore
-from .control import ControlConfig, PlanFirst, ReplanTrigger, FailureReflection, PreflightCheck, RetryPolicy
-from .collaboration import CollabConfig, HandoffManager, PlannerRole, ExecutorRole, VerifierRole, get_collab_summary
+from .control import ControlConfig, PlanFirst, ReplanTrigger, FailureReflection, PreflightCheck, RetryPolicy, SelfVerify
+from .collaboration import CollabConfig, HandoffManager, PlannerRole, ExecutorRole, VerifierRole, CommanderRole, get_collab_summary
+from .collaboration.event import CollabEvent
 from .procedure import ProceduralConfig, ProceduralStore, ProceduralTrigger, ProceduralExpander, get_procedure_summary
 from nanobot.bus.queue import MessageBus
 from nanobot.agent.tools.registry import ToolRegistry
@@ -109,6 +110,11 @@ class NanoBotAgent(BaseAgent):
         self._logger.info("  Workspace: %s", self.workspace)
         self._logger.info("  Timeout: %ds", self.timeout)
         self._logger.info("=================================================================")
+
+    @property
+    def effective_workspace(self) -> Path:
+        """Agent 视角的工作目录路径。子类可重写（如 Harbor 模式返回容器内路径）。"""
+        return self.workspace
 
     @property
     def _transcript(self) -> List[Dict]:
@@ -282,14 +288,27 @@ class NanoBotAgent(BaseAgent):
             "You are an executor agent. Execute the current step precisely using the available tools.\n\n"
             "Execution guidance:\n"
             f"{self._build_collab_platform_guidance()}"
-            f"- Your working directory is `{self.workspace}`. Use RELATIVE paths (e.g. `.`, `logs/`, `data.csv`) for files.\n"
-            f"- Never use paths outside {self.workspace}.\n"
-            f"- Skills are located at: {self.workspace}/skills/\n"
+            f"- Your working directory is `{self.effective_workspace}`. Use RELATIVE paths (e.g. `.`, `logs/`, `data.csv`) for files.\n"
+            f"- Never use paths outside {self.effective_workspace}.\n"
+            f"- Skills are located at: {self.effective_workspace}/skills/\n"
             "- Prefer `write_file` for creating new files, including nested paths such as `src/main.py`.\n"
             "- Use `list_dir` to verify directory structure and `read_file` to verify file contents.\n"
             "- Use `exec` only when shell execution is genuinely necessary.\n"
             "- For document/data extraction tasks, avoid repeating the same full-file read. Use a focused command or short script to gather the needed facts, then write the requested output artifact promptly.\n"
             "- Do not create extra top-level directories unless the task explicitly requests them.\n"
+        )
+
+    def _build_commander_system_prompt(self) -> str:
+        """Build system prompt for Commander role (T3b)."""
+        base_prompt = CommanderRole.DEFAULT_SYSTEM_PROMPT.strip()
+        return (
+            f"{base_prompt}\n\n"
+            "Additional execution guidance:\n"
+            f"{self._build_collab_platform_guidance()}"
+            "- When decomposing tasks, prefer clear, independent subtasks that can be executed without ambiguity.\n"
+            "- Each subtask should have a clear success criterion.\n"
+            "- Monitor for early completion signals - if the main goal is achieved, don't continue dispatching.\n"
+            "- When executor reports issues, diagnose whether it's a subtask specification problem or an execution problem.\n"
         )
 
     def _init_control_modules(self) -> None:
@@ -299,17 +318,31 @@ class NanoBotAgent(BaseAgent):
         # PlanFirst - create LLM adapter for PlanFirst's expected signature
         async def plan_first_llm_adapter(prompt: str, max_tokens: int, temperature: float) -> str:
             """Adapter that converts PlanFirst's llm_fn signature to NanoBotAgent._call_llm."""
-            messages = [{"role": "user", "content": prompt}]
+            messages = [
+                {"role": "system", "content": "你是一个任务规划助手。根据用户给出的任务，输出简洁的执行步骤列表，格式为：1. [工具名] 操作描述。不要输出任何与任务无关的内容。"},
+                {"role": "user", "content": prompt},
+            ]
             result = await self._call_llm(messages, max_tokens=max_tokens)
-            return result.get("content", "")
+            # _call_llm 返回 litellm ModelResponse 对象，不是 dict
+            if hasattr(result, "choices") and result.choices:
+                return result.choices[0].message.content or ""
+            return ""
 
         self._plan_first = PlanFirst(config.plan_first, plan_first_llm_adapter)
 
         # ReplanTrigger
         self._replan_trigger = ReplanTrigger(config.replan)
 
-        # FailureReflection
-        self._failure_reflection = FailureReflection(config.reflection, self)
+        # FailureReflection - 使用 LLM adapter，和 PlanFirst 同样的模式
+        async def reflection_llm_adapter(prompt: str, max_tokens: int, temperature: float) -> str:
+            """Adapter that converts FailureReflection's llm_fn signature to NanoBotAgent._call_llm."""
+            messages = [{"role": "user", "content": prompt}]
+            result = await self._call_llm(messages, max_tokens=max_tokens)
+            if hasattr(result, "choices") and result.choices:
+                return result.choices[0].message.content or ""
+            return ""
+
+        self._failure_reflection = FailureReflection(config.reflection, reflection_llm_adapter)
 
         # PreflightCheck
         self._preflight_check = PreflightCheck(
@@ -321,14 +354,24 @@ class NanoBotAgent(BaseAgent):
         # RetryPolicy
         self._retry_policy = RetryPolicy(config.retry)
 
+        # SelfVerify
+        self._self_verify = SelfVerify(config.verify)
+
         self._logger.info(f"Control modules initialized: enabled={config.enabled}")
 
     def _init_collab_modules(self) -> None:
-        """初始化 collaboration 模块 (T3)"""
+        """初始化 collaboration 模块 (T3)
+
+        Supports three modes:
+        - planner_executor: Planner generates plan, Executor executes
+        - executor_verifier: Executor executes, Verifier reviews after (T3a)
+        - commander_executor: Commander decomposes and dispatches to Executor (T3b)
+        """
         config = self._collab_config
         self._planner_role = None
         self._executor_role = None
         self._verifier_role = None
+        self._commander_role = None
         self._handoff_manager = None
         if not config.enabled:
             return
@@ -361,9 +404,20 @@ class NanoBotAgent(BaseAgent):
                 config=config,
                 llm_call_fn=llm_call_fn,
                 model=verifier_model,
+                execute_tool_fn=self._execute_tool,
             )
         else:
             self._verifier_role = None
+
+        if config.mode == "commander_executor":
+            self._commander_role = CommanderRole(
+                config=config,
+                llm_call_fn=llm_call_fn,
+                model=planner_model,
+                system_prompt=self._build_commander_system_prompt(),
+            )
+        else:
+            self._commander_role = None
 
         # Create handoff manager
         self._handoff_manager = HandoffManager(
@@ -371,6 +425,7 @@ class NanoBotAgent(BaseAgent):
             planner=self._planner_role,
             executor=self._executor_role,
             verifier=self._verifier_role,
+            commander=self._commander_role,
         )
 
         self._logger.info(f"Collaboration modules initialized: mode={config.mode}, max_handoffs={config.max_handoffs}")
@@ -622,6 +677,84 @@ class NanoBotAgent(BaseAgent):
             self._record_collab_events(self._executor_role.consume_events())
         if self._verifier_role:
             self._record_collab_events(self._verifier_role.consume_events())
+        if self._commander_role:
+            self._record_collab_events(self._commander_role.consume_events())
+
+    def _record_handoff_event(self, from_role: str, to_role: str, reason: str, iteration: int) -> None:
+        """记录 executor ↔ verifier 的 handoff 事件到 transcript。"""
+        event = CollabEvent(
+            event_type="handoff",
+            role=to_role,
+            iteration=iteration,
+            data={"from": from_role, "to": to_role, "reason": reason},
+        )
+        self._transcript.append({
+            "type": "collab_event",
+            **event.to_dict(),
+        })
+        if self._handoff_manager:
+            self._handoff_manager.register_events([event])
+
+    def _build_executor_action_summary(self, messages: List[Dict]) -> str:
+        """从 messages 中提取 executor 的结构化行动摘要，供 verifier 参考。"""
+        files_written = []
+        files_read = []
+        commands_run = []
+        other_tools = []
+        final_text = ""
+
+        for msg in messages:
+            role = msg.get("role", "unknown")
+            content = msg.get("content", "")
+
+            # 提取 executor 的 tool calls
+            if role == "assistant" and isinstance(content, list):
+                for item in content:
+                    if not isinstance(item, dict):
+                        continue
+                    if item.get("type") == "toolCall":
+                        tool_name = item.get("name", "?")
+                        params = item.get("params", {})
+                        if tool_name == "write_file":
+                            path = params.get("path", params.get("file", "?"))
+                            file_content_preview = str(params.get("content", ""))[:150]
+                            files_written.append(f"  {path}: {file_content_preview}...")
+                        elif tool_name == "read_file":
+                            path = params.get("path", params.get("file", "?"))
+                            files_read.append(f"  {path}")
+                        elif tool_name == "exec":
+                            cmd = str(params.get("command", ""))[:200]
+                            commands_run.append(f"  {cmd}")
+                        else:
+                            args_preview = str(params)[:150]
+                            other_tools.append(f"  {tool_name}: {args_preview}")
+                    elif item.get("type") == "text":
+                        text = item.get("text", "").strip()
+                        if text:
+                            final_text = text  # 保留最后一条 assistant text
+
+            # 提取 tool results 中的关键信息
+            elif role == "tool" and isinstance(content, str):
+                # 不直接记录，由 verifier 自己检查
+                pass
+
+        # 构建结构化摘要
+        parts = []
+        if files_written:
+            parts.append(f"Files written ({len(files_written)}):")
+            parts.extend(files_written[:20])
+        if commands_run:
+            parts.append(f"Commands executed ({len(commands_run)}):")
+            parts.extend(commands_run[:15])
+        if other_tools:
+            parts.append(f"Other tool calls ({len(other_tools)}):")
+            parts.extend(other_tools[:10])
+        if files_read:
+            parts.append(f"Files read: {', '.join(set(files_read[:15]))}")
+        if final_text:
+            parts.append(f"Executor's final message:\n{final_text[:1000]}")
+
+        return "\n".join(parts) if parts else "No structured actions found."
 
     def _build_plan_system_message(self, plan: List[Dict[str, Any]], revision: bool = False) -> Dict[str, str]:
         """Format a collaboration plan as a system message."""
@@ -682,6 +815,163 @@ class NanoBotAgent(BaseAgent):
         ]
         messages.append(self._build_plan_system_message(plan, revision=bool(revision_reason)))
 
+    async def _run_commander_executor_flow(
+        self,
+        current_task: str,
+        max_handoffs: int = 3,
+    ) -> str:
+        """Execute the commander-executor collaboration flow (T3b).
+
+        Commander decomposes task into subtasks and dispatches them to Executor.
+        This provides proactive goal grounding (A段断裂修复) through explicit task decomposition.
+
+        Args:
+            current_task: The main task to execute
+            max_handoffs: Maximum number of subtask handoffs allowed
+
+        Returns:
+            Final synthesis from commander
+        """
+        if not (self._collab_config.enabled and self._commander_role and self._handoff_manager):
+            return ""
+
+        self._logger.info("[Collab-CmdExe] Starting commander-executor flow")
+
+        iteration = 0
+        all_results: List[Dict[str, Any]] = []
+
+        # Step 1: Commander decomposes the task
+        context = ""
+        if self._memory_store.is_enabled:
+            retrieved_items = self._memory_store.retrieve(query=current_task)
+            if retrieved_items:
+                context = self._memory_store.format_for_prompt(retrieved_items)
+
+        decompose_result = await self._commander_role.decompose_task(
+            current_task,
+            context=context if context else None,
+            iteration=iteration,
+        )
+        self._consume_role_events()
+        iteration += 1
+
+        subtasks = decompose_result.get("subtasks", [])
+        if not subtasks:
+            self._logger.warning("[Collab-CmdExe] Commander failed to decompose task")
+            return f"Commander failed to decompose task: {decompose_result.get('rationale', 'Unknown error')}"
+
+        self._logger.info(f"[Collab-CmdExe] Decomposed into {len(subtasks)} subtasks")
+
+        # Set tool definitions for executor
+        if self._executor_role:
+            tool_defs = self._tools.get_definitions()
+            self._executor_role.set_tool_definitions(tool_defs)
+
+        # Helper to build context from completed subtasks
+        def build_context():
+            if not all_results:
+                return context if context else None
+            ctx = context or ""
+            for r in all_results:
+                ctx += f"\n[Subtask {r.get('subtask_id', '?')} completed]: {r.get('result', '')}"
+            return ctx if ctx else None
+
+        # Step 2: Execute subtasks iteratively
+        while subtasks and self._handoff_manager.can_handoff():
+            current_subtask = subtasks[0]
+
+            # Commander dispatches to executor
+            dispatch_result = await self._commander_role.dispatch_next(
+                current_subtask,
+                context=build_context(),
+                iteration=iteration,
+            )
+            self._consume_role_events()
+            iteration += 1
+
+            dispatch_message = dispatch_result.get("dispatch_message", current_subtask.get("description", ""))
+
+            # Record handoff from commander to executor
+            handoff_event = self._handoff_manager.record_handoff(
+                "commander", "executor", "subtask_dispatch",
+                iteration, subtask_id=current_subtask.get("id"),
+            )
+            self._record_collab_events([handoff_event], register_manager=False)
+
+            self._logger.info(f"[Collab-CmdExe] Dispatching subtask {current_subtask.get('id')}: {current_subtask.get('description', '')[:50]}...")
+
+            # Execute the subtask
+            step = {
+                "step": current_subtask.get("id", 1),
+                "description": dispatch_message,
+                "action": "continue",
+            }
+            exec_result = await self._executor_role.execute_step(step, context=build_context(), iteration=iteration)
+            self._consume_role_events()
+            iteration += 1
+
+            # Record result
+            subtask_record = {
+                "subtask_id": current_subtask.get("id", 1),
+                "description": current_subtask.get("description", ""),
+                "result": exec_result.get("result", ""),
+                "error": exec_result.get("error"),
+                "success": exec_result.get("success", False),
+            }
+            all_results.append(subtask_record)
+
+            # Record handoff from executor back to commander
+            handoff_event = self._handoff_manager.record_handoff(
+                "executor", "commander", "subtask_complete",
+                iteration, subtask_id=current_subtask.get("id"),
+            )
+            self._record_collab_events([handoff_event], register_manager=False)
+
+            # Remove completed subtask
+            subtasks = subtasks[1:]
+
+            # If we have more subtasks, ask commander to synthesize and decide
+            if subtasks:
+                self._handoff_manager._handoff_count += 1
+                decision_result = await self._commander_role.synthesize_and_decide(
+                    subtask_record,
+                    subtasks,
+                    overall_context=build_context(),
+                    iteration=iteration,
+                )
+                self._consume_role_events()
+                iteration += 1
+
+                if decision_result.get("is_complete"):
+                    self._logger.info("[Collab-CmdExe] Commander signaled early completion")
+                    break
+
+        # Step 3: Commander generates final synthesis
+        self._logger.info(f"[Collab-CmdExe] Generating final synthesis ({len(all_results)} subtasks completed)")
+        final_result = await self._commander_role.generate_final_synthesis(
+            current_task,
+            all_results,
+            iteration=iteration,
+        )
+        self._consume_role_events()
+        iteration += 1
+
+        final_synthesis = final_result.get("final_synthesis", "")
+
+        # Record collaboration summary
+        self._transcript.append({
+            "type": "collab_event",
+            "event_type": "commander_executor_complete",
+            "data": {
+                "subtask_count": len(all_results),
+                "handoff_count": self._handoff_manager._handoff_count,
+                "final_synthesis_preview": final_synthesis[:500],
+            },
+        })
+
+        self._logger.info(f"[Collab-CmdExe] Flow complete, synthesis length: {len(final_synthesis)}")
+        return final_synthesis
+
     def _extract_domain_from_task(self, task: str) -> str | None:
         """Extract domain from task description for card filtering.
 
@@ -712,10 +1002,19 @@ class NanoBotAgent(BaseAgent):
         iteration = 0
         current_task = ""
         # 从 messages 中提取 task description（用于 control 模块）
-        for msg in messages:
-            if msg.get("role") == "user":
-                current_task = msg.get("content", "")[:500] if len(msg.get("content", "")) > 500 else msg.get("content", "")
-                break
+        # 优先取最后一个 user message，因为有些任务第一条是约束条件，第二条才是实际任务
+        user_messages = [msg for msg in messages if msg.get("role") == "user"]
+        if user_messages:
+            last_user = user_messages[-1]
+            content = last_user.get("content", "")
+            if isinstance(content, list):
+                # 有些是 list 格式，取第一个文本元素
+                for item in content:
+                    if isinstance(item, str):
+                        current_task = item[:500]
+                        break
+            else:
+                current_task = content[:500] if len(content) > 500 else content
 
         # Control: Plan-first - 在第一次迭代前生成计划
         if self._control_config.enabled and self._plan_first.config.enabled:
@@ -728,6 +1027,25 @@ class NanoBotAgent(BaseAgent):
                         "event": "plan_first",
                         "plan": plan_context,
                     })
+                    # 将计划注入 messages，引导模型按步骤执行
+                    messages.append({
+                        "role": "system",
+                        "content": (
+                            f"Here is the execution plan for this task:\n\n{plan_context}\n\n"
+                            f"IMPORTANT: Start by using list_dir to discover all files in {self.effective_workspace}/, "
+                            "then read the input files with read_file. "
+                            "Do NOT create or fabricate any input data — all necessary files already exist in the workspace."
+                        ),
+                    })
+                else:
+                    # 计划生成失败或为空，记录到 transcript 方便调试
+                    self._transcript.append({
+                        "type": "control_event",
+                        "event": "plan_empty",
+                        "reason": "plan_generation_returned_empty",
+                        "raw_plan_preview": (plan.raw_plan or "")[:200],
+                        "step_count": len(plan.steps),
+                    })
             else:
                 # 简单任务跳过规划
                 self._transcript.append({
@@ -736,6 +1054,15 @@ class NanoBotAgent(BaseAgent):
                     "reason": "simple_task",
                     "task_preview": current_task[:100] if current_task else "",
                 })
+
+        consecutive_tool_turns = 0  # 跟踪连续工具调用次数（无纯文本回复）
+        verifier_force_interval = 15  # 每隔 N 次连续工具调用，强制触发总结
+
+        # T3b: Commander-Executor mode - run dedicated flow and return
+        if self._collab_config.enabled and self._collab_config.mode == "commander_executor":
+            self._logger.info("[Collab] Running commander_executor mode")
+            result = await self._run_commander_executor_flow(current_task)
+            return result
 
         while iteration < max_iterations:
             iteration += 1
@@ -761,6 +1088,11 @@ class NanoBotAgent(BaseAgent):
                                 "type": "control_event",
                                 "event": "new_plan",
                                 "plan": plan_context,
+                            })
+                            # 将新计划注入 messages，引导模型调整策略
+                            messages.append({
+                                "role": "system",
+                                "content": f"The previous plan failed. Here is a revised plan:\n\n{plan_context}",
                             })
                     self._replan_trigger.confirm_replan()
 
@@ -966,7 +1298,72 @@ class NanoBotAgent(BaseAgent):
                         })
                         return content
 
-                # 正常非空回复，返回
+                # Control: SelfVerify - 在返回前注入验证 prompt
+                consecutive_tool_turns = 0  # 纯文本回复，重置连续工具计数
+                if self._control_config.enabled and self._self_verify.config.enabled and self._self_verify.can_verify:
+                    verify_prompt = self._self_verify.build_verify_prompt(current_task)
+                    messages.append({"role": "user", "content": verify_prompt})
+                    self._self_verify.record_round()
+                    self._transcript.append({
+                        "type": "control_event",
+                        "event": "verify_triggered",
+                        "round": self._self_verify._rounds_done,
+                    })
+                    self._logger.info(f"[SelfVerify] Verification round {self._self_verify._rounds_done} injected")
+                    continue  # 继续循环，让模型处理验证 prompt
+
+                # 正常非空回复
+                # === Verifier 验证阶段 ===
+                if (self._collab_config.enabled
+                        and self._verifier_role
+                        and self._collab_config.mode == "executor_verifier"
+                        and self._collab_handoffs < self._collab_config.max_handoffs):
+                    # 记录 executor 的最终输出到 transcript
+                    content_items = []
+                    if content:
+                        content_items.append(self._as_text_item(content))
+                    self._transcript.append({
+                        "type": "message",
+                        "message": {
+                            "role": "assistant",
+                            "content": content_items,
+                        }
+                    })
+
+                    # 设置工具定义并触发 verifier 验证
+                    self._verifier_role.set_tool_definitions(tool_defs)
+                    self._record_handoff_event("executor", "verifier", "executor_completed", iteration)
+
+                    self._logger.info(f"[Collab] Verifier started (handoff {self._collab_handoffs + 1}/{self._collab_config.max_handoffs})")
+
+                    verify_result = await self._verifier_role.verify_with_tools(
+                        task=current_task,
+                        executor_output=content,
+                        executor_actions=self._build_executor_action_summary(messages),
+                        iteration=iteration,
+                    )
+
+                    # 刷入 verifier 事件到 transcript
+                    self._consume_role_events()
+
+                    if verify_result["verdict"] == "PASS":
+                        self._record_handoff_event("verifier", "executor", "verified_pass", iteration)
+                        self._logger.info(f"[Collab] Verifier PASS (used {verify_result['tool_count']} tool calls)")
+                        return content
+                    else:
+                        # FAIL：将反馈注入 executor 消息，继续循环
+                        self._collab_handoffs += 1
+                        feedback_msg = (
+                            f"[Verifier Feedback - Round {self._collab_handoffs}]\n"
+                            f"The verifier found issues with your work:\n{verify_result['feedback']}\n\n"
+                            f"Please address these issues and try again."
+                        )
+                        messages.append({"role": "system", "content": feedback_msg})
+                        self._record_handoff_event("verifier", "executor", f"verified_fail_round_{self._collab_handoffs}", iteration)
+                        self._logger.info(f"[Collab] Verifier FAIL round {self._collab_handoffs}, feedback injected")
+                        continue  # 继续让 executor 修复
+
+                # 无 verifier 或 handoffs 已用完，直接返回
                 content_items = []
                 if content:
                     content_items.append(self._as_text_item(content))
@@ -981,7 +1378,7 @@ class NanoBotAgent(BaseAgent):
 
             # 执行工具调用
             for tool_call in tool_calls:
-                tool_name = tool_call.get("function", {}).get("name", "")
+                tool_name = tool_call.get("function", {}).get("name", "").strip()
 
                 # 解析参数
                 args_str = tool_call["function"]["arguments"]
@@ -1005,6 +1402,12 @@ class NanoBotAgent(BaseAgent):
                             "tool": tool_name,
                             "errors": preflight_result.errors,
                             "warnings": preflight_result.warnings,
+                        })
+                        # 将 preflight 失败信息注入 messages
+                        warning_text = "; ".join(preflight_result.errors + preflight_result.warnings)
+                        messages.append({
+                            "role": "system",
+                            "content": f"Preflight check flagged an issue with your '{tool_name}' call: {warning_text}. Consider adjusting your approach.",
                         })
                     elif preflight_result.warnings:
                         self._transcript.append({
@@ -1096,6 +1499,14 @@ class NanoBotAgent(BaseAgent):
                             "root_cause": reflection.root_cause,
                             "suggested_correction": reflection.suggested_correction,
                         })
+                        # 将反思结果注入 messages，帮助模型纠正方向
+                        reflection_msg = (
+                            f"Failure Analysis:\n"
+                            f"- Root cause: {reflection.root_cause}\n"
+                            f"- Suggested correction: {reflection.suggested_correction}\n"
+                            f"Please adjust your approach accordingly."
+                        )
+                        messages.append({"role": "system", "content": reflection_msg})
 
                 # 写入 memory (根据 write policy)
                 event_type = "error" if is_error else "tool_result"
@@ -1173,6 +1584,32 @@ class NanoBotAgent(BaseAgent):
                         # Clear the triggered flag so it doesn't re-fire on the same iteration
                         self._procedural_trigger.clear_unexpected_triggered()
 
+            # Collaboration: 连续工具调用过多时，强制注入总结消息触发 verifier
+            if tool_calls and self._collab_config.enabled and self._collab_config.mode == "executor_verifier":
+                consecutive_tool_turns += 1
+                if (consecutive_tool_turns >= verifier_force_interval
+                        and self._collab_handoffs < self._collab_config.max_handoffs):
+                    self._logger.info(
+                        f"[Collab] Executor has done {consecutive_tool_turns} consecutive tool calls, "
+                        f"forcing summary to trigger verifier"
+                    )
+                    messages.append({
+                        "role": "system",
+                        "content": (
+                            "You have been working for a while. Please summarize what you have done so far "
+                            "and provide your current best answer to the task. "
+                            "Do NOT call any more tools — just give your answer now."
+                        ),
+                    })
+                    self._transcript.append({
+                        "type": "collab_event",
+                        "event_type": "force_summary",
+                        "role": "executor",
+                        "iteration": iteration,
+                        "data": {"consecutive_tool_turns": consecutive_tool_turns},
+                    })
+                    consecutive_tool_turns = 0  # 重置，避免重复触发
+
             # Collaboration: flush any buffered role events to transcript
             self._consume_role_events()
 
@@ -1195,10 +1632,12 @@ class NanoBotAgent(BaseAgent):
             self._retry_policy.reset()
             self._preflight_check.clear_history()
             self._plan_first.clear()
+            self._self_verify.reset()
             # 设置 retry 事件回调以记录细粒度事件到 transcript
             self._retry_policy.set_event_callback(self._emit_control_event)
 
         # 重置 collaboration 模块状态 (T3)
+        self._collab_handoffs = 0
         if self._collab_config.enabled and self._handoff_manager:
             self._handoff_manager.reset()
             if self._planner_role:
@@ -1207,6 +1646,8 @@ class NanoBotAgent(BaseAgent):
                 self._executor_role.reset()
             if self._verifier_role:
                 self._verifier_role.reset()
+                self._verifier_role._total_tool_calls = 0
+                self._verifier_role._verification_rounds = []
 
         # 重置 procedural 模块状态 (T4)
         if self._procedural_config.enabled and self._procedural_trigger:
@@ -1279,6 +1720,9 @@ class NanoBotAgent(BaseAgent):
             # 使用 asyncio 运行
             max_iters = kwargs.get("max_iterations", 50)
             max_output_tokens = kwargs.get("max_output_tokens", 16384)
+            # 支持 execute 时覆盖 system_prompt
+            if "system_prompt" in kwargs and kwargs["system_prompt"]:
+                self.system_prompt = kwargs["system_prompt"]
             content = asyncio.run(self._run_loop(messages, max_iterations=max_iters, max_output_tokens=max_output_tokens))
             self._logger.debug(f"[execute] _run_loop returned, content length: {len(content) if content else 0}, transcript entries: {len(self._transcript)}")
             self._save_session_messages(session_id, messages)
@@ -1287,7 +1731,7 @@ class NanoBotAgent(BaseAgent):
             self._logger.error(f"[execute] Exception caught: {type(e).__name__}: {e}")
             content = ""
             error_msg = str(e)
-            self._transcript = []  # 清空 transcript
+            # 保留 transcript 用于调试和 summary 记录
 
         execution_time = time.time() - start_time
 
@@ -1328,6 +1772,7 @@ class NanoBotAgent(BaseAgent):
                 "failure_stats": self._failure_reflection.get_failure_stats(),
                 "retry_stats": self._retry_policy.get_retry_stats(),
                 "preflight_stats": self._preflight_check.get_check_stats(),
+                "verify_stats": self._self_verify.get_verify_stats(),
             }
             self._transcript.append({
                 "type": "control_event",
@@ -1343,6 +1788,16 @@ class NanoBotAgent(BaseAgent):
                 collab_summary = self._handoff_manager.get_summary()
             if collab_summary is None:
                 collab_summary = {"enabled": True, "mode": self._collab_config.mode}
+            # 增强：添加 verifier 统计
+            if self._verifier_role and hasattr(self._verifier_role, 'get_stats'):
+                collab_summary["verifier_stats"] = self._verifier_role.get_stats()
+            collab_summary["total_handoffs"] = self._collab_handoffs
+            collab_summary["max_handoffs"] = self._collab_config.max_handoffs
+            collab_summary["final_verdict"] = (
+                self._verifier_role._verification_rounds[-1]["verdict"]
+                if self._verifier_role and self._verifier_role._verification_rounds
+                else "N/A"
+            )
             self._transcript.append({
                 "type": "collab_event",
                 "event": "collab_summary",
@@ -1629,3 +2084,8 @@ class HarborNanoBotAgent(NanoBotAgent):
             restrict_to_workspace=True,
             disable_safety_guard=self.kwargs.get("disable_safety_guard", False),
         ))
+
+    @property
+    def effective_workspace(self) -> Path:
+        """Agent 视角的工作目录路径。Harbor 模式下为容器内挂载点。"""
+        return Path(self.mount_point)

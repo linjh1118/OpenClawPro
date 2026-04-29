@@ -41,7 +41,10 @@ class ExecutionPlan:
         return "\n".join(lines)
 
     def to_context(self) -> str:
-        """转换为注入到 prompt 的格式（无触发判断）"""
+        """转换为注入到 prompt 的格式"""
+        # 优先使用 raw_plan（包含 think 过程的完整输出）
+        if self.raw_plan and self.raw_plan.strip():
+            return self.raw_plan.strip()
         if not self.steps:
             return ""
         lines = ["[EXECUTION PLAN]", f"Task: {self.task}", ""]
@@ -195,19 +198,32 @@ class PlanFirst:
 
     def _build_plan_prompt(self, task: str, context: str) -> str:
         """构建计划生成 prompt"""
-        return f"""You are an execution planner. Break down the following task into clear, actionable steps.
+        return f"""You are an execution planner. Think carefully before planning.
 
 Task: {task}
 
 {context}
 
-Generate a concise execution plan (max {self.config.max_plan_length} tokens). Format:
+CRITICAL RULES:
+1. ALWAYS start by reading existing files in the workspace (use list_dir to discover files, then read_file to inspect them).
+2. NEVER fabricate, invent, or create sample/mock input data. All input data already exists in the workspace files.
+3. If a file is not found, use list_dir to search the workspace directory for the correct filename or path.
+4. Focus on PROCESSING existing data, not creating it.
+
+First, analyze the task feasibility:
+- Are there any contradictory or impossible requirements?
+- Are all constraints simultaneously satisfiable?
+
+Then generate a concise execution plan (max {self.config.max_plan_length} tokens):
 ## Plan
-1. [Action] - Brief rationale
-2. [Action] - Brief rationale
+1. [list_dir] Discover all files in the workspace
+2. [read_file] Read the instruction.md and all input files
+3. [Action] Process the data as required
+4. [write_file] Write the output files
 ...
 
 Focus on:
+- Start with file discovery and reading (list_dir → read_file)
 - Required tools in correct order
 - Expected outcomes of each step
 - Critical checkpoints

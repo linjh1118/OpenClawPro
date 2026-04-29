@@ -11,7 +11,7 @@ from typing import Any, Dict, List
 
 from .config import CollabConfig, HandoffPolicy
 from .event import CollabEvent
-from .roles import PlannerRole, ExecutorRole, VerifierRole
+from .roles import PlannerRole, ExecutorRole, VerifierRole, CommanderRole
 
 logger = logging.getLogger("agent.collab.handoff")
 
@@ -32,12 +32,14 @@ class HandoffManager:
         planner: PlannerRole,
         executor: ExecutorRole,
         verifier: VerifierRole | None = None,
+        commander: CommanderRole | None = None,
     ):
         self.config = config
         self.policy = config.handoff_policy
         self.planner = planner
         self.executor = executor
         self.verifier = verifier
+        self.commander = commander
 
         self._handoff_count = 0
         self._events: List[CollabEvent] = []
@@ -138,7 +140,18 @@ class HandoffManager:
                 if verify_result.get("verdict") in ("FAIL", "REVISION") and self.can_handoff():
                     # Trigger revision through planner
                     self._handoff_count += 1
-                    revision_context = f"Previous step failed: {step_result.get('error', 'Unknown error')}\nFeedback: {verify_result.get('feedback', '')}"
+                    feedback = verify_result.get('feedback', '')
+                    revision_context = f"""Previous step FAILED verification and must be corrected.
+
+Error: {step_result.get('error', 'Unknown error')}
+
+Verification Feedback:
+{feedback}
+
+Instructions:
+1. Analyze the feedback above to understand what went wrong
+2. Revise your plan to address the specific issues
+3. Ensure the new plan correctly handles the task requirements"""
                     new_plan_result = await self.planner.generate_plan(
                         task,
                         context=revision_context,
@@ -186,6 +199,7 @@ class HandoffManager:
         iteration = 0
         all_events: List[CollabEvent] = []
         context = initial_context or ""
+        prev_messages: List[Dict] | None = None
 
         # Execute initial attempt
         step = {"step": 1, "description": task, "action": "execute"}
@@ -194,6 +208,7 @@ class HandoffManager:
         iteration += 1
 
         final_result = step_result.get("result", "")
+        prev_messages = step_result.get("messages", None)
 
         # Verify result
         max_verification_attempts = 3
@@ -207,12 +222,39 @@ class HandoffManager:
 
             if self.can_handoff() and attempt < max_verification_attempts - 1:
                 self._handoff_count += 1
-                # Re-execute with feedback
-                revision_context = f"{context}\nVerification feedback: {verify_result.get('feedback', '')}"
-                step_result = await self.executor.execute_step(step, context=revision_context, iteration=iteration)
+                feedback = verify_result.get('feedback', '')
+
+                if prev_messages:
+                    # Build new messages from previous conversation
+                    # Remove last assistant message(s) and replace with feedback
+                    new_messages = self._replace_last_with_feedback(prev_messages, feedback)
+                    step_result = await self.executor.execute_step(
+                        step, context=None, iteration=iteration, prev_messages=new_messages
+                    )
+                else:
+                    # Fallback: use context-based approach
+                    revision_context = f"""{context}
+
+## IMPORTANT: CORRECTION REQUIRED
+
+Your previous attempt FAILED verification. Please correct the issues below before re-executing:
+
+{feedback}
+
+Instructions:
+1. Read the feedback above carefully
+2. Identify what specifically went wrong
+3. Re-examine the data sources to find the correct information
+4. Produce a corrected result that addresses the feedback
+5. Do NOT repeat the same incorrect approach"""
+                    step_result = await self.executor.execute_step(
+                        step, context=revision_context, iteration=iteration
+                    )
+
                 all_events.extend(self.executor.get_events())
                 iteration += 1
                 final_result = step_result.get("result", final_result)
+                prev_messages = step_result.get("messages", None)
             else:
                 break
 
@@ -222,6 +264,168 @@ class HandoffManager:
             "events": all_events,
             "iterations": iteration,
             "handoff_count": self._handoff_count,
+        }
+
+    def _replace_last_with_feedback(
+        self, messages: List[Dict], feedback: str
+    ) -> List[Dict]:
+        """Replace the last assistant message with a user message containing feedback.
+
+        This preserves the conversation history (system + user + assistant + tool results)
+        but redirects the model to correct its error instead of continuing the wrong path.
+        """
+        new_messages = []
+        found_first_assistant = False
+
+        for msg in messages:
+            role = msg.get("role", "")
+            # Skip the first assistant message and all subsequent messages (tool results, final assistant, etc.)
+            if role == "assistant":
+                if not found_first_assistant:
+                    # This is the first assistant message - skip it and mark that we found it
+                    found_first_assistant = True
+                    continue
+                else:
+                    # This is a subsequent assistant (or final) message - skip it
+                    continue
+            # Skip tool messages that came after the assistant's tool call
+            if role == "tool":
+                continue
+            # Keep everything else (system, user)
+            new_messages.append(msg)
+
+        # Append feedback as user message
+        new_messages.append({
+            "role": "user",
+            "content": f"""## IMPORTANT: CORRECTION REQUIRED
+
+Your previous attempt FAILED verification. Please correct the issues below:
+
+{feedback}
+
+Instructions:
+1. Read the feedback above carefully
+2. Identify what specifically went wrong
+3. Re-examine the data sources to find the correct information
+4. Produce a corrected result that addresses the feedback
+5. Do NOT repeat the same incorrect approach"""
+        })
+
+        return new_messages
+
+    async def execute_commander_executor(
+        self,
+        task: str,
+        initial_context: str | None = None,
+    ) -> Dict[str, Any]:
+        """Execute the commander-executor collaboration flow (T3b).
+
+        Commander decomposes task into subtasks and dispatches them to Executor.
+        This provides proactive goal grounding (A段断裂修复) through explicit task decomposition.
+
+        Returns:
+            Dict with "success", "result", "events", "iterations"
+        """
+        if not self.commander:
+            raise ValueError("CommanderRole is required for commander_executor mode")
+
+        iteration = 0
+        all_events: List[CollabEvent] = []
+        all_results: List[Dict[str, Any]] = []
+
+        # Step 1: Commander decomposes the task
+        decompose_result = await self.commander.decompose_task(task, context=initial_context, iteration=iteration)
+        all_events.extend(self.commander.get_events())
+        iteration += 1
+
+        subtasks = decompose_result.get("subtasks", [])
+        if not subtasks:
+            return {
+                "success": False,
+                "result": "Commander failed to decompose task",
+                "events": all_events,
+                "iterations": iteration,
+            }
+
+        # Build context from completed subtasks
+        def build_context():
+            if not all_results:
+                return initial_context
+            ctx = initial_context or ""
+            for r in all_results:
+                ctx += f"\n[Subtask {r.get('subtask_id', '?')} completed]: {r.get('result', '')}"
+            return ctx
+
+        # Step 2: Execute subtasks iteratively
+        while subtasks and self.can_handoff():
+            current_subtask = subtasks[0]
+
+            # Commander dispatches to executor
+            dispatch_result = await self.commander.dispatch_next(current_subtask, context=build_context(), iteration=iteration)
+            all_events.extend(self.commander.get_events())
+            iteration += 1
+
+            dispatch_message = dispatch_result.get("dispatch_message", current_subtask.get("description", ""))
+
+            # Record handoff from commander to executor
+            self.record_handoff("commander", "executor", "subtask_dispatch", iteration, subtask_id=current_subtask.get("id"))
+
+            # Execute the subtask
+            step = {
+                "step": current_subtask.get("id", 1),
+                "description": dispatch_message,
+                "action": "continue",
+            }
+            exec_result = await self.executor.execute_step(step, context=build_context(), iteration=iteration)
+            all_events.extend(self.executor.get_events())
+            iteration += 1
+
+            # Record result
+            subtask_record = {
+                "subtask_id": current_subtask.get("id", 1),
+                "description": current_subtask.get("description", ""),
+                "result": exec_result.get("result", ""),
+                "error": exec_result.get("error"),
+                "success": exec_result.get("success", False),
+            }
+            all_results.append(subtask_record)
+
+            # Record handoff from executor back to commander
+            self.record_handoff("executor", "commander", "subtask_complete", iteration, subtask_id=current_subtask.get("id"))
+
+            # Remove completed subtask
+            subtasks = subtasks[1:]
+
+            # If we have more subtasks, ask commander to synthesize and decide
+            if subtasks:
+                self._handoff_count += 1
+                decision_result = await self.commander.synthesize_and_decide(
+                    subtask_record,
+                    subtasks,
+                    overall_context=build_context(),
+                    iteration=iteration,
+                )
+                all_events.extend(self.commander.get_events())
+                iteration += 1
+
+                if decision_result.get("is_complete"):
+                    break
+
+                # Update remaining subtasks if commander modified plan
+                # (current implementation keeps original order)
+
+        # Step 3: Commander generates final synthesis
+        final_result = await self.commander.generate_final_synthesis(task, all_results, iteration=iteration)
+        all_events.extend(self.commander.get_events())
+        iteration += 1
+
+        return {
+            "success": final_result.get("success", False),
+            "result": final_result.get("final_synthesis", ""),
+            "events": all_events,
+            "iterations": iteration,
+            "handoff_count": self._handoff_count,
+            "subtask_count": len(all_results),
         }
 
     def get_summary(self) -> Dict[str, Any]:

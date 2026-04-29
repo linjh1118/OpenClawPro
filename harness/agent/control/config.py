@@ -69,6 +69,16 @@ class ReflectionConfig:
 
 
 @dataclass
+class VerifyConfig:
+    """SelfVerify 配置 - 任务完成后自检输出"""
+    enabled: bool = False
+    # 最大验证轮次（防止无限循环）
+    max_rounds: int = 1
+    # 验证 prompt 最大 token
+    max_tokens: int = 512
+
+
+@dataclass
 class ControlConfig:
     """Control 总配置"""
     enabled: bool = False
@@ -82,3 +92,5 @@ class ControlConfig:
     preflight_check_params: bool = True
     # 是否检查工具是否适合当前任务
     preflight_check_suitability: bool = False
+    # SelfVerify 配置
+    verify: VerifyConfig = field(default_factory=VerifyConfig)

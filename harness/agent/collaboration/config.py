@@ -36,7 +36,10 @@ class CollabConfig:
     """Configuration for collaboration module (T3)."""
     enabled: bool = False
     # Collaboration mode
-    mode: Literal["planner_executor", "executor_verifier"] = "planner_executor"
+    # - planner_executor: Planner generates plan, Executor executes steps
+    # - executor_verifier: Executor executes, Verifier reviews after (T3a)
+    # - commander_executor: Commander decomposes task and dispatches to Executor (T3b)
+    mode: Literal["planner_executor", "executor_verifier", "commander_executor"] = "planner_executor"
     # Critique frequency
     critique_frequency: Literal["on_error", "every_step", "never"] = "on_error"
     # Handoff policy
@@ -47,6 +50,8 @@ class CollabConfig:
     planner_model: str | None = None
     # Whether to use separate model for verifier
     verifier_model: str | None = None
+    # verifier 验证时最多调用工具轮次
+    max_verifier_turns: int = 10
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -63,6 +68,7 @@ class CollabConfig:
             "max_handoffs": self.max_handoffs,
             "planner_model": self.planner_model,
             "verifier_model": self.verifier_model,
+            "max_verifier_turns": self.max_verifier_turns,
         }
 
     @classmethod
