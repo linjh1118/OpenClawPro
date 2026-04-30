@@ -995,7 +995,7 @@ class NanoBotAgent(BaseAgent):
         """
         domain_keywords = {
             "medical": ["pubmed", "clinical", "rct", "randomized", "biomedical", "medical", "healthcare"],
-            "software": ["code", "debug", "refactor", "test", "deploy", "repository", "github"],
+            "software": ["source code", "debug", "refactor", "test", "deploy", "repository", "github"],
             "research": ["paper", "survey", "literature", "arxiv", "citation", "reference"],
             "data": ["dataset", "analysis", "visualization", "csv", "database", "query"],
         }
@@ -1257,6 +1257,15 @@ class NanoBotAgent(BaseAgent):
                                     insert_idx = i + 1
                                     break
                             messages.insert(insert_idx, procedure_msg)
+                            # Record card injection to transcript for debugging
+                            self._transcript.append({
+                                "type": "procedural_event",
+                                "event": "cards_injected",
+                                "cards": [c.name for c in cards],
+                                "top_score": top_score,
+                                "threshold": threshold,
+                                "task_preview": current_task[:100],
+                            })
 
             # T3: Collaboration - planner_executor uses planner for initial plan and bounded revisions.
             if self._collab_config.enabled and self._handoff_manager:

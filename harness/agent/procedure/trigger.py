@@ -51,9 +51,9 @@ class ProceduralTrigger:
         # Backward-compatible keyword trigger cache
         self._cached_triggers: Set[str] = set()
 
-        # Index cards for dense retrieval
-        if config.enabled and config.program_support.enabled:
-            self._init_retriever()
+        # Lazy init: do NOT initialize BERT in __init__.
+        # Defer to _init_retriever() on first English query in retrieve_cards().
+        # Chinese queries use keyword matching and never need BERT.
 
     def _init_retriever(self) -> None:
         """Initialize dense retriever and index cards."""
@@ -80,13 +80,24 @@ class ProceduralTrigger:
     # T4a: Program Support Card Retrieval
     # ─────────────────────────────────────────
 
+    @staticmethod
+    def _has_chinese(text: str) -> bool:
+        """Check if text contains CJK characters."""
+        for ch in text:
+            if '一' <= ch <= '鿿':
+                return True
+        return False
+
     def retrieve_cards(
         self,
         task: str,
         context: str | None = None,
         domain: str | None = None,
     ) -> List[Tuple[SkillCard, float, List[str]]]:
-        """Retrieve top-k relevant program support cards via dense retrieval.
+        """Retrieve top-k relevant program support cards.
+
+        For Chinese queries: keyword matching first (BERT is English-only).
+        For English queries: dense retrieval first, keyword fallback if empty.
 
         Args:
             task: The current task description
@@ -99,19 +110,29 @@ class ProceduralTrigger:
         if not self.config.enabled or not self.config.program_support.enabled:
             return []
 
-        self._init_retriever()
-
         query = task
         if context:
             query = f"{task} {context}"
 
         results: List[Tuple[SkillCard, float, List[str]]] = []
 
-        # Try dense retrieval first
+        # Chinese queries: keyword matching only — skip BERT entirely to save time
+        if self._has_chinese(query) and self.config.program_support.use_keyword_fallback:
+            results = self._keyword_fallback(task, context, domain)
+            if results:
+                logger.info(
+                    f"[ProceduralTrigger] Retrieved {len(results)} cards via keyword matching "
+                    f"(Chinese query, skipped BERT, top card: {results[0][0].name})"
+                )
+                return results
+            # Keyword miss for Chinese — still skip BERT (English model unreliable for CJK)
+            return []
+
+        # English queries: lazy-init BERT on first call
+        self._init_retriever()
         if self._retriever is not None:
             retrieved = self._retriever.retrieve(query)
             for card_name_or_result, score, matched in retrieved:
-                # Handle both old-style (name) and new-style (name,) returns
                 if isinstance(card_name_or_result, str):
                     card = self.store.get(card_name_or_result)
                 else:
@@ -120,7 +141,6 @@ class ProceduralTrigger:
                 if card is None:
                     continue
 
-                # Domain filter
                 if domain and card.domain and card.domain != domain:
                     continue
 
@@ -144,7 +164,7 @@ class ProceduralTrigger:
                     f"(top score: {results[0][1]:.4f})"
                 )
 
-        # Keyword fallback
+        # Keyword fallback for English queries when dense retrieval returns nothing
         if not results and self.config.program_support.use_keyword_fallback:
             results = self._keyword_fallback(task, context, domain)
 
@@ -167,7 +187,7 @@ class ProceduralTrigger:
                 continue
 
             matched_keywords = self._find_matched_keywords(card, text_lower)
-            if matched_keywords:
+            if matched_keywords and sum(max(1, len(kw.split())) for kw in matched_keywords) >= 2:
                 results.append((card, 0.5, matched_keywords))
                 self._cached_triggers.add(card.name)
 
@@ -182,16 +202,32 @@ class ProceduralTrigger:
         results.sort(key=lambda x: len(x[2]), reverse=True)
         return results[: self.config.max_expansions_per_iteration]
 
+    @staticmethod
+    def _has_cjk(text: str) -> bool:
+        """Check if text contains CJK characters."""
+        for ch in text:
+            if '一' <= ch <= '鿿':
+                return True
+        return False
+
     def _find_matched_keywords(self, card: SkillCard, text_lower: str) -> List[str]:
-        """Find which keywords from a card match in the text."""
+        """Find which keywords from a card match in the text.
+
+        Uses \b word boundary for English keywords, simple substring
+        for CJK keywords (\b doesn't work for Chinese/Japanese/Korean).
+        """
         matched = []
         for keyword in card.trigger_keywords:
             keyword_lower = keyword.lower()
-            pattern = r'\b' + re.escape(keyword_lower) + r'\b'
-            if re.search(pattern, text_lower):
-                matched.append(keyword)
-            elif len(keyword_lower) >= 5 and keyword_lower in text_lower:
-                matched.append(keyword)
+            if self._has_cjk(keyword_lower):
+                if keyword_lower in text_lower:
+                    matched.append(keyword)
+            else:
+                pattern = r'\b' + re.escape(keyword_lower) + r'\b'
+                if re.search(pattern, text_lower):
+                    matched.append(keyword)
+                elif len(keyword_lower) >= 5 and keyword_lower in text_lower:
+                    matched.append(keyword)
         return matched
 
     # ─────────────────────────────────────────

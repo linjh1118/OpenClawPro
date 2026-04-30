@@ -10,6 +10,7 @@ Retrieval: frozen BERT bi-encoder → cosine similarity → top-k cards.
 from __future__ import annotations
 
 import logging
+import os
 from typing import List, Optional, Tuple
 
 import numpy as np
@@ -51,12 +52,16 @@ class DenseRetriever:
             )
             raise
 
+        # Force offline mode — rely on cached models only, never attempt download
+        os.environ["HF_HUB_OFFLINE"] = "1"
+
         logger.info(
-            f"[DenseRetriever] Loading embedding model: {self.retrieval_cfg.embedding_model}"
+            f"[DenseRetriever] Loading embedding model (offline): {self.retrieval_cfg.embedding_model}"
         )
         self._model = SentenceTransformer(
             self.retrieval_cfg.embedding_model,
             device=self.retrieval_cfg.device,
+            local_files_only=True,
         )
         logger.info(f"[DenseRetriever] Model loaded on device: {self.retrieval_cfg.device}")
 
