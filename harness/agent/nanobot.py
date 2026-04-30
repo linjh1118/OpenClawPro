@@ -26,6 +26,7 @@ import litellm
 from litellm import acompletion
 from .base import AgentResult, BaseAgent
 from .memory import MemoryConfig, EpisodicMemoryStore
+from .memory_structured import StructuredMemoryConfig, StructuredMemoryStore
 from .control import ControlConfig, PlanFirst, ReplanTrigger, FailureReflection, PreflightCheck, RetryPolicy, SelfVerify
 from .collaboration import CollabConfig, HandoffManager, PlannerRole, ExecutorRole, VerifierRole, CommanderRole, get_collab_summary
 from .collaboration.event import CollabEvent
@@ -50,6 +51,7 @@ class NanoBotAgent(BaseAgent):
         workspace: Path,
         timeout: int = 300,
         memory_config: MemoryConfig | None = None,
+        structured_memory_config: StructuredMemoryConfig | None = None,
         control_config: ControlConfig | None = None,
         collab_config: CollabConfig | None = None,
         procedural_config: ProceduralConfig | None = None,
@@ -68,6 +70,10 @@ class NanoBotAgent(BaseAgent):
         # 初始化 memory store
         self._memory_config = memory_config or MemoryConfig(enabled=False)
         self._memory_store = EpisodicMemoryStore(self._memory_config)
+
+        # 初始化 structured memory store (H2)
+        self._structured_memory_config = structured_memory_config or StructuredMemoryConfig(enabled=False)
+        self._structured_memory_store = StructuredMemoryStore(self._structured_memory_config)
 
         # 初始化 control 模块
         self._control_config = control_config or ControlConfig(enabled=False)
@@ -968,7 +974,7 @@ class NanoBotAgent(BaseAgent):
             "data": {
                 "subtask_count": len(all_results),
                 "handoff_count": self._handoff_manager._handoff_count,
-                "final_synthesis_preview": final_synthesis[:500],
+                "final_synthesis_preview": final_synthesis,
             },
         })
 
@@ -1070,6 +1076,31 @@ class NanoBotAgent(BaseAgent):
         while iteration < max_iterations:
             iteration += 1
             self._memory_store.increment_iteration()
+            self._structured_memory_store.increment_iteration()
+
+            # H2: 在第一次迭代前，从任务指令中初始化结构化状态
+            if iteration == 1 and self._structured_memory_store.is_enabled and current_task:
+                self._structured_memory_store.initialize_from_task(current_task, iteration=iteration)
+                init_summary = self._structured_memory_store.get_summary()
+                self._transcript.append({
+                    "type": "structured_memory_event",
+                    "event": "initialized_from_task",
+                    "iteration": iteration,
+                    "slot_counts": init_summary["slot_counts"],
+                })
+
+            # H2: 周期性 LLM 批量更新（基于 buffer，不再每次工具调用都解析）
+            if self._structured_memory_store.is_enabled:
+                if self._structured_memory_store.should_llm_update():
+                    flush_results = self._structured_memory_store.flush_buffer()
+                    flush_summary = self._structured_memory_store.get_summary()
+                    self._transcript.append({
+                        "type": "structured_memory_event",
+                        "event": "llm_batch_update",
+                        "iteration": iteration,
+                        "slot_counts": flush_summary["slot_counts"],
+                        "updates": [{"slot_id": r.slot_id, "action": r.action} for r in flush_results] if flush_results else [],
+                    })
 
             # Control: 检查是否需要重规划
             if self._control_config.enabled and self._replan_trigger.config.enabled:
@@ -1128,6 +1159,31 @@ class NanoBotAgent(BaseAgent):
                             "total_items": self._memory_store.item_count,
                             "retrieval_policy": self._memory_store.config.retrieval_policy.value,
                             "memory_context_preview": memory_context[:500],
+                        })
+
+            # H2: Structured Memory — inject decision-relevant state representations
+            if self._structured_memory_store.is_enabled:
+                retrieved_slots = self._structured_memory_store.retrieve()
+                structured_context = self._structured_memory_store.format_for_prompt()
+                if structured_context:
+                    structured_msg = {
+                        "role": "system",
+                        "content": f"\n\n{structured_context}"
+                    }
+                    # Insert after regular memory context if present
+                    insert_idx = len(messages)
+                    for i, msg in enumerate(messages):
+                        if msg.get("role") == "system" and "memory" in msg.get("content", "").lower():
+                            insert_idx = i + 1
+                    messages.insert(insert_idx, structured_msg)
+                    # Record to transcript
+                    if iteration == 1:
+                        self._transcript.append({
+                            "type": "structured_memory_event",
+                            "event": "structured_memory_retrieval",
+                            "iteration": iteration,
+                            "slot_counts": {st: len(slots) for st, slots in retrieved_slots.items()},
+                            "structured_context_preview": structured_context[:500],
                         })
 
             # T4a: Program Support Cards - inject via dense retrieval at task start
@@ -1534,6 +1590,22 @@ class NanoBotAgent(BaseAgent):
                             "content_preview": (tool_result or "")[:200],
                         })
 
+                # H2: Structured memory — transform tool results into decision-relevant state
+                if self._structured_memory_store.is_enabled:
+                    update_results = self._structured_memory_store.update_state(
+                        tool_name=tool_name,
+                        tool_args=transcript_args,
+                        tool_result=tool_result,
+                    )
+                    if update_results and self._transcript:
+                        self._transcript.append({
+                            "type": "structured_memory_event",
+                            "event": "state_update",
+                            "iteration": iteration,
+                            "tool_name": tool_name,
+                            "updates": [{"slot_id": r.slot_id, "action": r.action} for r in update_results],
+                        })
+
                 # 添加 assistant 消息到 transcript（格式兼容 pinchbench grading）
                 # grading 代码期望: content = [{"type": "toolCall", "name": "...", "params": {...}}]
                 content_items = []
@@ -1627,6 +1699,7 @@ class NanoBotAgent(BaseAgent):
 
         # 重置 memory store
         self._memory_store.reset()
+        self._structured_memory_store.reset()
 
         # 重置 control 模块状态
         if self._control_config.enabled:

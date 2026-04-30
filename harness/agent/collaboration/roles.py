@@ -88,7 +88,7 @@ Be specific about what tools to use and what the expected outcomes are."""
 
             return {
                 "plan": plan,
-                "rationale": content[:500],
+                "rationale": content[:2000],
                 "iteration": iteration,
             }
 
@@ -190,26 +190,27 @@ Always verify your own work before presenting it as complete."""
         context: str | None = None,
         iteration: int = 0,
         prev_messages: List[Dict] | None = None,
+        max_iterations: int = 20,
     ) -> Dict[str, Any]:
-        """Execute a single plan step.
+        """Execute a plan step with full agent loop (multiple LLM calls + tool executions).
 
         Args:
             step: Step description dict
             context: Optional context string to prepend to user message
             iteration: Current iteration number
-            prev_messages: If provided, use these messages as conversation history instead of building new ones.
-                          The last assistant message will be replaced with feedback.
+            prev_messages: If provided, use these messages as conversation history
+            max_iterations: Max LLM calls per subtask (default 20)
 
         Returns:
-            Dict with "success" (bool), "result" (str), "error" (str | None), "messages" (list)
+            Dict with "success" (bool), "result" (str), "error" (str | None), "messages" (list),
+            "tool_calls" (list of tools used), "iterations" (int)
         """
         step_num = step.get("step", "?")
         step_desc = step.get("description", "")
 
-        logger.info(f"[ExecutorRole] Executing step {step_num}: {step_desc[:50]}...")
+        logger.info(f"[ExecutorRole] Executing step {step_num} with loop: {step_desc[:50]}...")
 
         if prev_messages is not None:
-            # Use provided messages as base (feedback will be inserted by caller)
             messages = prev_messages
         else:
             messages = [
@@ -220,67 +221,103 @@ Always verify your own work before presenting it as complete."""
                 user_content = f"Previous context:\n{context}\n\n{user_content}"
             messages.append({"role": "user", "content": user_content})
 
-        try:
-            response = await self._llm_call(
-                messages,
-                model=self.model,
-                tools=self._tool_defs if self._tool_defs else None,
-            )
+        tool_calls_made = []
+        exec_iteration = 0
+        final_result = ""
 
-            # Check if LLM wants to call tools
-            if hasattr(response, "choices") and response.choices:
+        try:
+            while exec_iteration < max_iterations:
+                exec_iteration += 1
+
+                response = await self._llm_call(
+                    messages,
+                    model=self.model,
+                    tools=self._tool_defs if self._tool_defs else None,
+                )
+
+                if not (hasattr(response, "choices") and response.choices):
+                    break
+
                 choice = response.choices[0]
                 message = choice.message
 
-                if hasattr(message, "tool_calls") and message.tool_calls:
-                    # Execute the tool call
-                    for tc in message.tool_calls:
-                        tool_name = tc.function.name
-                        args = json.loads(tc.function.arguments) if isinstance(tc.function.arguments, str) else tc.function.arguments
-                        result = await self._execute_tool({
-                            "id": tc.id,
-                            "function": {"name": tool_name, "arguments": args}
-                        })
-
-                        event = CollabEvent(
-                            event_type="step_executed",
-                            role="executor",
-                            iteration=iteration,
-                            data={"step": step_num, "tool": tool_name, "result": result[:200]},
-                        )
-                        self._events.append(event)
-
-                        return {
-                            "success": not result.startswith("Error:"),
-                            "result": result,
-                            "tool_used": tool_name,
-                            "error": None if not result.startswith("Error:") else result,
-                            "messages": messages,
-                        }
-                else:
-                    # No tool call, return content as result
-                    content = message.content or ""
+                if not hasattr(message, "tool_calls") or not message.tool_calls:
+                    # No tool calls - LLM has finished and returned text response
+                    final_result = message.content or ""
                     event = CollabEvent(
                         event_type="step_executed",
                         role="executor",
                         iteration=iteration,
-                        data={"step": step_num, "content": content[:200]},
+                        data={
+                            "step": step_num,
+                            "content": final_result[:500],
+                            "iterations": exec_iteration,
+                            "tools_used": len(tool_calls_made),
+                        },
+                    )
+                    self._events.append(event)
+                    break
+
+                # Execute all tool calls in this response
+                for tc in message.tool_calls:
+                    tool_name = tc.function.name
+                    args = json.loads(tc.function.arguments) if isinstance(tc.function.arguments, str) else tc.function.arguments
+
+                    tool_result = await self._execute_tool({
+                        "id": tc.id,
+                        "function": {"name": tool_name, "arguments": args}
+                    })
+
+                    tool_calls_made.append({
+                        "tool": tool_name,
+                        "args": args,
+                        "result": tool_result[:500] if tool_result else "",
+                    })
+
+                    # Add assistant message with tool call
+                    messages.append({
+                        "role": "assistant",
+                        "content": None,
+                        "tool_calls": [
+                            {
+                                "id": tc.id,
+                                "type": "function",
+                                "function": {
+                                    "name": tool_name,
+                                    "arguments": tc.function.arguments if isinstance(tc.function.arguments, str) else json.dumps(tc.function.arguments),
+                                },
+                            }
+                        ],
+                    })
+                    # Add tool result message
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tc.id,
+                        "content": tool_result,
+                    })
+
+                    event = CollabEvent(
+                        event_type="tool_called",
+                        role="executor",
+                        iteration=iteration,
+                        data={"step": step_num, "tool": tool_name, "args": args, "result": tool_result[:500]},
                     )
                     self._events.append(event)
 
-                    return {
-                        "success": True,
-                        "result": content,
-                        "tool_used": None,
-                        "error": None,
-                        "messages": messages,
-                    }
+                # Loop continues - LLM will see tool results and decide next action
+
+            if exec_iteration >= max_iterations:
+                logger.warning(f"[ExecutorRole] Max iterations ({max_iterations}) reached for step {step_num}")
+                final_result = f"Step completed with {len(tool_calls_made)} tool calls but reached max iterations."
 
             return {
-                "success": False,
-                "result": "",
-                "error": "No response from LLM",
+                "success": True,
+                "result": final_result,
+                "tool_used": tool_calls_made[-1]["tool"] if tool_calls_made else None,
+                "tool_calls": tool_calls_made,
+                "error": None,
                 "messages": messages,
+                "iterations": exec_iteration,
             }
 
         except Exception as e:
@@ -297,6 +334,9 @@ Always verify your own work before presenting it as complete."""
                 "success": False,
                 "result": "",
                 "error": str(e),
+                "tool_calls": tool_calls_made,
+                "messages": messages,
+                "iterations": exec_iteration,
             }
 
     def record_step_execution(
@@ -438,7 +478,7 @@ Next action: {description of next subtask or "TASK_COMPLETE"}
                 data={
                     "subtask_count": len(subtasks),
                     "first_subtask": subtasks[0] if subtasks else None,
-                    "raw_response": content[:500],
+                    "raw_response": content,
                 },
             )
             self._events.append(event)
@@ -447,7 +487,7 @@ Next action: {description of next subtask or "TASK_COMPLETE"}
 
             return {
                 "subtasks": subtasks,
-                "rationale": content[:500],
+                "rationale": content[:2000],
                 "iteration": iteration,
             }
 
@@ -497,7 +537,7 @@ Next action: {description of next subtask or "TASK_COMPLETE"}
                 event_type="subtask_dispatched",
                 role="commander",
                 iteration=iteration,
-                data={"subtask": subtask.get('description', '')[:100], "dispatch": content[:200]},
+                data={"subtask": subtask.get('description', '')[:200], "dispatch": content[:1000]},
             )
             self._events.append(event)
 
@@ -544,7 +584,7 @@ Next action: {description of next subtask or "TASK_COMPLETE"}
             user_content += "## Completed Subtasks\n"
             for i, st in enumerate(completed_subtasks, 1):
                 user_content += f"\n{i}. {st.get('description', 'N/A')}\n"
-                user_content += f"   Result: {st.get('result', 'N/A')[:500]}\n"
+                user_content += f"   Result: {st.get('result', 'N/A')[:2000]}\n"
                 if st.get('error'):
                     user_content += f"   Error: {st['error']}\n"
             user_content += "\n"
@@ -610,7 +650,7 @@ Important:
                     "is_complete": is_complete,
                     "has_new_subtask": new_subtask is not None,
                     "completed_count": len(self._completed_subtasks),
-                    "raw_response": content[:500],
+                    "raw_response": content,
                 },
             )
             self._events.append(event)
