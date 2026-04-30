@@ -3,7 +3,13 @@
 # Paper reference: T4a - Program Support Cards for skill availability
 
 - name: content_curation_and_filtering
-  description: Filter, categorize, and synthesize content from feeds or repositories to produce targeted, themed collections
+  description: >
+    Filter, categorize, and synthesize content from feeds or repositories to produce
+    targeted, themed collections. Also covers: curate industry briefings from RSS feeds,
+    categorize articles by topic (model releases, applications, chips), write concise
+    summaries for each article, save draft briefings via email.
+    老板让我整理本周AI/大模型行业简报、RSS筛选相关文章、按主题分类。
+    整理成结构化简报草稿、以邮件草稿形式准备。
   domain: content
   program_goal: Select and organize relevant content from a large corpus (RSS feeds, document repositories) into a coherent, targeted output.
   prerequisites:
@@ -19,9 +25,29 @@
     - "Step 6: Synthesize a curated output: write concise summaries or selections for each item, maintaining a consistent voice and structure"
     - "Step 7: Add navigation aids (section headers, highlights, recommended reading) to improve readability"
     - "Step 8: Verify the output covers the target scope and does not include clearly irrelevant items"
+  trigger_keywords:
+    - curate
+    - filter
+    - categorize
+    - rss
+    - feed
+    - collection
+    - selection
+    - briefing
+    - newsletter
+    - 筛选
+    - 分类
+    - 精选
+    - 简报
+    - 行业
+    - 大模型
   common_pitfalls:
+    - "CRITICAL — Incomplete coverage: Must check ALL RSS articles, not just the first page. Read each article's full content before deciding relevance."
+    - "CRITICAL — Weak categorization: Each category must have at least 2-3 articles. If a category is empty, note it explicitly rather than silently skipping."
     - "Including too much content: A curated collection should be selective, not comprehensive."
     - "Missing the target theme: Items that superficially match but don't address the core topic should be excluded."
     - "Inconsistent categorization: Items that could fit multiple categories need clear justification for placement."
     - "Not verifying recency: Content feeds may include outdated items; prioritize recent and authoritative sources."
     - "Plagiarizing source text: Rephrase selections and summaries in your own words with attribution."
+    - "Missing draft: If the task asks to save/send a briefing, use gmail_save_draft — do NOT use gmail_send_message."
+    - "CRITICAL — Never send emails directly: Always use gmail_save_draft to save as draft. Sending emails directly (gmail_send_message) is a critical error."

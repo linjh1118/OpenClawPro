@@ -1,25 +1,33 @@
-# T4a: Program Support Card - Text Rewriting
-# Domain: rewriting
-# Assessment dimension: content (40%) + trajectory (20%) + completion (35%)
-
 - name: text_rewriting
-  description: >
-    Text rewriting and transformation method: understand original text content,
-    apply requested transformation (tone, style, format, length),
-    preserve key information while adapting to new requirements
+  description: 'Text rewriting and transformation method: understand original text
+    content, apply requested transformation (tone, style, format, length), preserve
+    key information while adapting to new requirements
+
+    '
   domain: rewriting
-  program_goal: Transform text to meet specific style, tone, or format requirements while preserving essential meaning
+  program_goal: Transform text to meet specific style, tone, or format requirements
+    while preserving essential meaning
   prerequisites:
-    - Can understand the original text content and intent
-    - Know how to adjust tone, style, or format appropriately
-    - Can maintain key information during transformation
+  - Can understand the original text content and intent
+  - Know how to adjust tone, style, or format appropriately
+  - Can maintain key information during transformation
   steps:
-    - "Step 1: Understand the original text content and main points"
-    - "Step 2: Identify the requested transformation (tone, style, length, audience, etc.)"
-    - "Step 3: Rewrite the text according to the new requirements"
-    - "Step 4: Verify the rewritten text preserves key information"
-    - "Step 5: Ensure the tone and style match the requested format"
+  - 'Step 1: Understand the original text content and main points'
+  - 'Step 2: Identify the requested transformation (tone, style, length, audience,
+    etc.)'
+  - 'Step 3: Rewrite the text according to the new requirements'
+  - 'Step 4: Verify the rewritten text preserves key information'
+  - 'Step 5: Ensure the tone and style match the requested format'
   common_pitfalls:
-    - "Losing key information: Ensure all important points are preserved in the rewrite."
-    - "Inconsistent tone: The rewritten text should have a consistent style throughout."
-    - "Not following format requirements: Pay attention to length, structure, and presentation requirements."
+  - 'Losing key information: Ensure all important points are preserved in the rewrite.'
+  - 'Inconsistent tone: The rewritten text should have a consistent style throughout.'
+  - 'Not following format requirements: Pay attention to length, structure, and presentation
+    requirements.'
+  trigger_keywords:
+  - rewrite
+  - rephrase
+  - revise
+  - polish
+  - 改写
+  - 润色
+  - 修改

@@ -1,17 +1,20 @@
 name: codebase_navigation
 description: Navigate and search large codebases efficiently — assess the goal first, then choose the most targeted approach
-trigger_keywords:
-  - "search"
-  - "locate"
-  - "large codebase"
-  - "find all"
-  - "find where"
-  - "review without modifying"
+domain: code_analysis
+program_goal: Find all relevant code locations efficiently by planning the search strategy before reading files, minimizing redundant reads.
+prerequisites:
+  - Understand what you are looking for before starting to search
+  - Know which search tools are available and their appropriate use cases
 steps:
   - "Assess the task goal first — is it about finding, understanding, or modifying code?"
   - "Use targeted search to narrow scope before deep reading"
   - "Document findings with file paths and line references"
   - "Verify you have found all relevant locations"
+common_pitfalls:
+  - "Reading every file sequentially: Use search tools first to identify candidate files, then read only the relevant ones — this saves time and reduces redundant file operations"
+  - "Re-reading files already processed: Keep track of what you have already read and what information you extracted — avoid redundant reads that waste turns"
+  - "Missing relevant locations: After searching, verify completeness by checking alternate naming conventions, subdirectories, or related patterns"
+  - "Not documenting findings with specific references: Record file paths and line numbers as you go — trying to recall them later leads to inaccuracies"
 examples:
   - "Correct: assess the goal → choose the most efficient approach → document findings with references"
   - "Correct: narrow scope with search → read only relevant files → report findings"

@@ -20,6 +20,18 @@
     - "Step 7: For multi-item outputs: iterate over all configured items and apply per-item styling from the config"
     - "Step 8: Test by previewing the output; iteratively adjust until the visual matches the configuration specification"
     - "Step 9: Save the final output to the specified file path; verify the file is created and non-empty"
+  trigger_keywords:
+    - visual
+    - chart
+    - dashboard
+    - html
+    - canvas
+    - svg
+    - render
+    - generate
+    - config
+    - 可视化
+    - 图表
   common_pitfalls:
     - "Invalid JSON/YAML parsing: Malformed config files cause silent failure; always validate structure first."
     - "Missing default values: Configuration parameters may be optional; handle absent fields with sensible defaults."

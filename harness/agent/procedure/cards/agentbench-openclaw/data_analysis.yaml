@@ -1,33 +1,25 @@
 name: data_reconciliation_and_analysis
 description: Analyze and derive insights from structured tabular data — read CSV or spreadsheet files, compute summary statistics (mean, median, min, max, counts, percentages), group data by categories, identify trends and patterns, and produce actionable insights from a single data source
-trigger_keywords:
-  - "csv"
-  - "spreadsheet"
-  - "xlsx"
-  - "survey"
-  - "statistics"
-  - "mean"
-  - "median"
-  - "percentage"
-  - "breakdown"
-  - "group by"
-  - "department"
-  - "satisfaction"
-  - "insight"
-  - "anomaly"
-  - "outlier"
-  - "missing values"
-  - "key finding"
-  - "aggregate"
-  - "total"
+domain: data_analysis
+program_goal: Read structured data files accurately, compute verifiable statistics from actual data content, and produce a faithful analysis report where every number traces back to the source.
+prerequisites:
+  - Source file must exist and be parseable — validate before proceeding
+  - Understand which metrics and groupings the task requires before reading the file
 steps:
-  - "Read the input data file to understand its structure and columns"
-  - "Verify data integrity: check if file is complete, well-formed, and not truncated or corrupted"
-  - "If data appears truncated, incomplete, or contains syntax errors (e.g., missing quotes, trailing commas, unclosed brackets), report the specific issue instead of hallucinating or fabricating analysis"
-  - "Compute required aggregates: totals, averages, counts, percentages as needed for each numeric column"
+  - "BEFORE any analysis: validate the source file integrity — if it is JSON/CSV, attempt to parse it with Python (e.g., json.loads, csv.reader); if parsing fails, STOP and report the exact error (missing brackets, unquoted keys, trailing commas, etc.) — do NOT proceed to fabricate results from corrupted data"
+  - "Read the input data file to understand its structure and columns — count the ACTUAL number of rows, columns, and categories from the file content; do NOT assume or invent data dimensions"
+  - "If data appears truncated, incomplete, or contains syntax errors, report the specific issue instead of hallucinating or fabricating analysis"
+  - "Compute required aggregates: totals, averages, counts, percentages as needed for each numeric column — use only numbers actually present in the file"
   - "Break down results by any requested categories or groups"
   - "Derive key insights — go beyond raw numbers to understand what the data means"
   - "Present findings clearly with specific numbers and evidence from the data"
+common_pitfalls:
+  - "Fabricating data dimensions: Never report row/column counts or category names you did not actually observe — count them from the file content"
+  - "Computing statistics from memory instead of actual data: All numbers in your report must come from the file, not your expectations — if the file has 11 rows, report 11, not 50"
+  - "Assuming complete data when file is truncated: If you cannot read the full file, report what you can see and explicitly state the limitation"
+  - "Inventing categories or groups that do not appear in the data: Only report groups that are actually present in the file"
+  - "Reporting statistics without cross-verification: Spot-check a few numbers by manually computing from the raw data to catch hallucinations"
+  - "Incomplete data traversal: When the task requires processing all entries or items, ensure every record is visited — partial traversal leads to missing items in the final output"
 examples:
   - "Correct: read survey CSV → compute mean/median for each numeric column → group by department → derive 3 insights"
   - "Correct: load spreadsheet → calculate percentages → report findings with supporting statistics"

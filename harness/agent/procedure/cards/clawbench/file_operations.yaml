@@ -1,9 +1,17 @@
 name: clawbench_official_file_operations
-description: Text editing and file operations — line wrapping at character limits, whitespace
-  normalization and punctuation spacing, extract table of contents from markdown documents,
-  parse and extract structured content from text files, batch file processing, format
-  conversion (CSV to Markdown, JSON to YAML), directory structure creation, text
-  substitution across multiple files
+description: Text editing and file operations — line wrapping at character limits,
+  whitespace normalization and punctuation spacing, extract table of contents from
+  markdown documents, parse and extract structured content from text files, batch
+  file processing, format conversion (CSV to Markdown, JSON to YAML), directory structure
+  creation, text substitution across multiple files, word extraction and character
+  counting, CSV report formatting
+domain: ''
+program_goal: Perform text and file operations precisely, producing correctly formatted
+  output with accurate calculations
+prerequisites:
+- All required input files must exist in the workspace before starting — never fabricate
+  missing input data
+- Understand the exact output format specification before processing
 trigger_keywords:
 - batch file
 - batch process
@@ -20,6 +28,29 @@ trigger_keywords:
 - json to
 - markdown table
 - text file
+- word extraction
+- character count
+- wc
+- sequential task
+- csv report
+- summary row
+- grand total
+common_pitfalls:
+- CRITICAL — Never fabricate input data. If input files or directories are empty or
+  missing, STOP and report the error. Do NOT create sample documents, test files,
+  or placeholder data to fill in — the verifier checks against original inputs
+- wc -c counts bytes including trailing newlines; Python len(text) counts characters
+  without trailing newline. For exact character counts, use len(text.rstrip('\n'))
+  instead of wc -c
+- When extracting the Nth word from each line, verify position indexing carefully
+  — test with a simple example first to confirm 0-based vs 1-based counting
+- '''For summary/total rows in tables or reports: independently sum all individual
+  values'' to verify the total is correct before writing'
+- Always verify numerical results by re-computing from source values
+- 'For line wrapping: every output line must be <= 80 characters. After writing, verify
+  by counting characters on each line programmatically'
+- 'For markdown table separators: use exactly `|---|` (3 dashes per cell) format, NOT
+  long dashes like `|-------------|`. The separator row must be `|---|---|---|` style'
 steps:
 - 'Step 1: Read all input files first — understand the format, encoding, and structure
   before making any changes'

@@ -19,8 +19,20 @@
     - "Step 2: Execute the selected tools and collect the results"
     - "Step 3: Verify if the results are complete and correct"
     - "Step 4: If results are unexpected, try alternative tools or approaches"
+  trigger_keywords:
+    - orchestration
+    - multiple tools
+    - workflow
+    - tool chain
+    - pipeline
+    - integration
+    - 编排
+    - 工具链
+    - 自动化
   common_pitfalls:
+    - "CRITICAL — Tool call sufficiency: Before producing the final answer, verify you have called enough tools. Tasks with only 1-2 tool calls almost always miss information."
+    - "CRITICAL — Repetitive calls: Do NOT call the same tool with the same parameters more than once. If a tool returned empty results, change your approach instead of retrying."
     - "Using the wrong tool for the task type: Match tool capabilities to task requirements."
-    - "Not verifying tool outputs: Always check if results make sense."
+    - "Not verifying tool outputs: Always check if results make sense before proceeding."
     - "Repeating the same failed approach: Change tools after 2-3 unsuccessful attempts."
-    - "Over-using tools: Use the minimum set of tools needed to complete the task."
+    - "Over-using tools: Use the minimum set of tools needed to complete the task — more calls ≠ better results."

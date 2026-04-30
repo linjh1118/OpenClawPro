@@ -4,9 +4,11 @@
 
 - name: code_analysis_verification
   description: >
-    Code analysis and verification method: understand code structure and purpose,
-    identify potential issues through systematic review, verify hypotheses through execution,
-    provide specific evidence-based recommendations
+    Code analysis and verification: review code for bugs, trace execution order,
+    identify logic errors, analyze JavaScript async/await execution, review CUDA kernel
+    bugs, trace generator functions, verify code correctness by running tests.
+    代码分析：审查Bug、分析执行顺序、追踪异步代码、检查量化算子错误。
+    Covers code review for JavaScript, Python, CUDA, and other languages.
   domain: coding
   program_goal: Identify defects, vulnerabilities, and performance issues through systematic analysis and execution verification
   prerequisites:
@@ -20,8 +22,38 @@
     - "Step 4: Execute code to reproduce and verify each hypothesis — static analysis alone is insufficient"
     - "Step 5: Analyze execution results: confirm or refute each hypothesis with specific evidence"
     - "Step 6: Provide actionable recommendations with evidence (error outputs, line numbers, stack traces)"
+  trigger_keywords:
+    - bug
+    - debug
+    - error
+    - review
+    - verify
+    - defect
+    - vulnerability
+    - performance
+    - execution
+    - crash
+    - exception
+    - traceback
+    - trace
+    - generator
+    - async
+    - 代码
+    - 调试
+    - 错误
+    - Bug
+    - 执行
+    - 顺序
+    - 追踪
+    - 审查
   common_pitfalls:
+    - "CRITICAL — Zero tool calls: You MUST use at least one tool call (exec to run code, web_search to find documentation, or write_file to save analysis). A pure text answer with 0 tool calls gets severely penalized regardless of quality."
+    - "CRITICAL — No execution verification: Even for code snippets in the prompt, use exec to write and run the code to verify your analysis. Do not rely on mental simulation alone."
+    - "CRITICAL — Runtime not available: If the target language runtime is not installed: (1) For sync logic (data processing, math, algorithms): rewrite in Python to verify. (2) For async/event-loop/concurrency code (Promise.then, generators, async/await): do NOT write simulators — instead, trace execution step-by-step on paper, drawing a table of {call stack, microtask queue, macrotask queue} state at each step. Simulating event loops in Python introduces more bugs than it finds."
     - "Skipping execution verification: Always run code to confirm issues — do not rely on speculation alone."
+    - "CRITICAL — Simulator hallucination: When you rewrite foreign code in Python, the rewrite itself may have bugs that produce misleading results. Always verify: does the Python version actually replicate the original semantics, or did you introduce a subtle difference? For async/concurrency code, prefer manual trace over simulation."
     - "Vague or generic feedback: Provide specific evidence (file names, line numbers, error messages) explaining the causal mechanism."
     - "Missing boundary conditions: The most common defects occur at input space boundaries."
     - "Focusing on style over correctness: Prioritize correctness and safety issues over formatting."
+    - "Not listing ALL bugs: If the code has multiple issues, identify and explain EVERY one — partial analysis gets partial credit."
+    - "CRITICAL — 算法逆向：当任务是逆向一个编码器并写出对应编码器时，先逐函数 trace 输入→输出关系，画出数据流图，再设计正向编码流程。不要只理解单个函数——关注函数间的组合效果（如 RLE+Huffman 协同压缩）。验证编码后解码结果是否一致，且编码效率达标。"

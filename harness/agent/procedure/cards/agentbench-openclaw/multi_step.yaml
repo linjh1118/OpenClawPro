@@ -1,19 +1,23 @@
 name: multi_step_workflow
 description: Execute multi-step workflows — identify each stage, execute in order, produce all expected outputs
-trigger_keywords:
-  - "multi-step"
-  - "workflow"
-  - "pipeline"
-  - "sequential"
-  - "step by step"
-  - "action items"
-  - "checklist"
+domain: workflow
+program_goal: Complete every stage of a multi-step task in the correct order, producing all required intermediate and final outputs without skipping steps.
+prerequisites:
+  - All required input files and resources must be identified before starting
+  - The complete list of stages must be understood from the task description
 steps:
   - "Identify each stage from the task description"
   - "Execute each stage in the appropriate order"
   - "Each stage may produce intermediate results needed by the next stage"
   - "Produce all expected outputs before finishing"
   - "Use relative paths from /tmp/workspace — never prefix paths with tmp/workspace or repeat the workspace directory"
+common_pitfalls:
+  - "Skipping later stages: After completing the main work, it is easy to forget final steps like changelog updates, verification, or documentation — explicitly check off each stage"
+  - "Not verifying completeness against the original task: Before declaring done, re-read the task requirements and confirm every requested output exists"
+  - "Losing intermediate results: Write intermediate outputs to files rather than keeping them only in memory — this prevents data loss if output is truncated"
+  - "Running out of time on complex workflows: Plan the full sequence of steps upfront and estimate effort per step — prioritize completing all steps over perfecting any single step"
+  - "Wrong file paths in multi-file outputs: Each output file must use the exact path specified — double-check filenames before writing"
+  - "Writing output without post-verification: After creating the final file, re-read it and check against every formatting requirement (headers, footers, required sections) — do not assume the write was perfect"
 examples:
   - "Correct: identify each stage → execute in order → produce all expected outputs"
   - "Correct: complete each stage in sequence"

@@ -4,9 +4,15 @@
 
 - name: productivity_operations
   description: >
-    Productivity task completion method: identify required service operations,
-    retrieve and cross-reference multiple records, extract structured information
-    (action items, assignees, deadlines), verify completeness, execute operations correctly
+    Productivity and office task management: manage todo lists, merge duplicate tasks,
+    mark overdue items, update task status, organize meeting notes, summarize meetings,
+    share notes with attendees, manage calendar events and reminders.
+    Covers todo management (list, update, merge duplicates, mark complete),
+    note operations (list, get, share), and meeting-related productivity workflows.
+    Also handles: organize pending tasks, consolidate and tidy up todo items,
+    mark overdue tasks, merge duplicate entries without deleting.
+    待办整理：帮我整理一下待办、重复的合并掉、过期的标记一下、不要删除。
+    会议总结：总结会议要点、发送给参会人员、整理会议笔记。
   domain: productivity
   program_goal: Complete productivity tasks by correctly invoking calendar, notes, email, todo, or other office services
   prerequisites:
@@ -21,9 +27,28 @@
     - "Step 5: Verify all required information is collected before executing any share/create/update operations"
     - "Step 6: Execute the final operation with verified parameters"
     - "Step 7: Confirm the final state matches the task requirements"
+  trigger_keywords:
+    - todo
+    - notes
+    - meeting
+    - calendar
+    - productivity
+    - schedule
+    - reminder
+    - agenda
+    - action item
+    - assignee
+    - 会议
+    - 待办
+    - 总结
+    - 笔记
   common_pitfalls:
+    - "CRITICAL — Zero tool calls: You MUST call at least one tool before giving your final answer. A pure text response with 0 tool calls is severely penalized. If web_search fails, try exec for calculations or use other available tools."
+    - "CRITICAL — Search loop: If web_search returns empty 2-3 times, STOP and use your own knowledge. Do not burn all your turns on failed searches."
+    - "CRITICAL — Underusing tools: Must list records first, then get EACH relevant record's details. One list call is NOT enough — partial information leads to incomplete actions and low completion score."
     - "Skipping records: Retrieve ALL relevant records — partial information leads to incomplete actions."
     - "Not cross-referencing: Action items in one record may reference details in another record."
-    - "Missing required fields: Ensure assignees, deadlines, and recipients are all verified before sharing."
-    - "Wrong recipients: Only share with people explicitly mentioned in the records."
-    - "Not verifying results: Always check that changes are reflected in the service response."
+    - "Missing required fields: Ensure assignees, deadlines, and recipients are all verified before sharing or updating."
+    - "Wrong recipients: Only share with people explicitly mentioned in the records — do not guess."
+    - "CRITICAL — Not verifying results: Always check that your final action (share, update, create) succeeded by examining the service response. If it failed, retry."
+    - "Fabricating details: Every name, date, and fact in your output must come from tool results, not your memory or assumptions."

@@ -1,25 +1,33 @@
-# T4a: Program Support Card - Content Synthesis
-# Domain: content_synthesis
-# Assessment dimension: content (30% weight)
-
 - name: content_synthesis
-  description: >
-    content generation and summarization method: extract key information from sources,
-    organize information into coherent structure, generate well-structured content,
-    verify completeness and accuracy of the generated content
+  description: 'content generation and summarization method: extract key information
+    from sources, organize information into coherent structure, generate well-structured
+    content, verify completeness and accuracy of the generated content
+
+    '
   domain: content_synthesis
-  program_goal: Produce high-quality, well-organized content that meets the user's requirements
+  program_goal: Produce high-quality, well-organized content that meets the user's
+    requirements
   prerequisites:
-    - Ability to extract key information from provided sources
-    - Understanding of how to structure content for readability
-    - Can verify that generated content is accurate and complete
+  - Ability to extract key information from provided sources
+  - Understanding of how to structure content for readability
+  - Can verify that generated content is accurate and complete
   steps:
-    - "Step 1: Extract key information and requirements from the user's request"
-    - "Step 2: Organize the information into a logical structure"
-    - "Step 3: Generate coherent content following the organized structure"
-    - "Step 4: Verify the content is complete, accurate, and meets requirements"
+  - 'Step 1: Extract key information and requirements from the user''s request'
+  - 'Step 2: Organize the information into a logical structure'
+  - 'Step 3: Generate coherent content following the organized structure'
+  - 'Step 4: Verify the content is complete, accurate, and meets requirements'
   common_pitfalls:
-    - "Missing key information: Ensure all important points are covered."
-    - "Poor organization: Structure content logically for readability."
-    - "Inaccurate content: Verify facts before including them in the output."
-    - "Incomplete response: Check that all aspects of the request are addressed."
+  - 'Missing key information: Ensure all important points are covered.'
+  - 'Poor organization: Structure content logically for readability.'
+  - 'Inaccurate content: Verify facts before including them in the output.'
+  - 'Incomplete response: Check that all aspects of the request are addressed.'
+  trigger_keywords:
+  - synthesize
+  - summarize
+  - summary
+  - draft
+  - compose
+  - 总结
+  - 综合
+  - 生成
+  - 起草

@@ -1,37 +1,24 @@
 name: structured_file_generation
 description: Generate well-structured output documents from source briefs or requirements — read input requirements, transform them into properly organized documents with executive summaries, bullet points, tables, timelines, and risk assessments; follow the specified structure exactly; create output files immediately with proper structure, do not delay until analysis is complete
-trigger_keywords:
-  - "spreadsheet"
-  - "csv"
-  - "json"
-  - "proposal"
-  - "brief"
-  - "executive summary"
-  - "timeline"
-  - "budget"
-  - "risk assessment"
-  - "objectives"
-  - "phases"
-  - "milestones"
-  - "mitigation"
-  - "convert"
-  - "transform"
-  - "output"
-  - "format"
-  - "columns"
-  - "document"
-  - "pitch"
-  - "deck"
-  - "migration"
-  - "scaffold"
-  - "linked"
+domain: document_generation
+program_goal: Transform source materials into complete, well-structured output documents that contain all required sections with accurate content derived from the source.
+prerequisites:
+  - Source brief or requirements must be fully read and understood
+  - All required output sections identified before writing begins
 steps:
+  - "If the source file is structured data (JSON, CSV, XML), validate it parses correctly first — if corrupted, report the error and do NOT fabricate content"
   - "Read the source brief or requirements document completely"
   - "Identify all required sections and components (summary, objectives, timeline, budget, risks)"
   - "Create the output file immediately with proper structure — do not delay file creation until analysis is complete"
   - "Use relative paths from /tmp/workspace — never prefix paths with tmp/workspace or repeat the workspace directory"
   - "Ensure all requested content is present and properly formatted"
   - "Verify the output file was created correctly with all required sections"
+common_pitfalls:
+  - "Missing required sections: Before finishing, cross-check the output against the task requirements — every requested section must be present with content, not just a header"
+  - "Creating only headers without filling in content: Each section needs substantive content derived from the source, not just section titles"
+  - "Wrong file paths: Use the exact filename and path specified in the task — do not add prefixes or change the extension"
+  - "Fabricating content when source data is incomplete: If the source lacks information for a section, note the gap explicitly rather than inventing content"
+  - "Delaying file creation: Create the output file early and iteratively fill it — this prevents losing work if the response is truncated"
 examples:
   - "Correct: read brief → create proposal with executive summary, objectives, timeline, budget table, risk assessment"
   - "Correct: understand requirements → transform into structured document with all specified sections"

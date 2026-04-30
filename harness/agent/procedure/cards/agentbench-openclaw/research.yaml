@@ -1,24 +1,20 @@
 name: document_synthesis_and_summarization
 description: Read and synthesize information from documents — summarize lengthy documents into structured key findings, identify limitations and gaps, produce concise executive summaries; investigate code mysteries using git history, trace bugs to their origin commit, and document findings in a clear investigation report
-trigger_keywords:
-  - "summarize"
-  - "summary"
-  - "whitepaper"
-  - "key findings"
-  - "executive summary"
-  - "limitations"
-  - "investigate"
-  - "git archaeology"
-  - "git log"
-  - "git blame"
-  - "regression"
-  - "investigation report"
-  - "root cause"
+domain: research
+program_goal: Accurately read and distill source material into concise, faithful summaries that preserve the original meaning without adding unsupported claims.
+prerequisites:
+  - The source document must be fully read before summarizing
+  - Distinguish between what the source explicitly states vs. what can be inferred
 steps:
   - "Read the entire source document to understand its full content"
   - "Identify key findings, main points, and any limitations or gaps"
   - "Synthesize information into a concise, structured summary"
   - "Present findings with supporting evidence from the source"
+common_pitfalls:
+  - "Summarizing without reading the full document: Partial reads lead to incomplete or incorrect summaries — always read the entire source first"
+  - "Adding information not in the source: A summary must only contain claims supported by the original document — do not inject external knowledge or assumptions"
+  - "Overly verbose output that gets truncated: Keep summaries concise — if the output is too long, it may be cut off before the conclusion"
+  - "Confusing inference with explicit statements: Clearly distinguish between what the source says directly and what can be reasonably inferred"
 examples:
   - "Correct: read document → extract key findings with explanations → write limitations section → executive summary"
   - "Correct: use git log/blame to trace a bug → identify root cause commit → write investigation report"

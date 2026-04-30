@@ -1,8 +1,16 @@
 name: clawbench_official_professional_domains
 description: Clinical healthcare and market research — HIPAA patient data de-identification
   and privacy (replace names with anonymous IDs, remove SSN, generalize DOB), patient
-  data and lab value interpretation (mg/dL, mmol/L), pharmaceutical trial data,
-  customer survey NPS analysis, market segmentation and competitor analysis
+  data and lab value interpretation (mg/dL, mmol/L), pharmaceutical trial data, customer
+  survey NPS analysis, market segmentation and competitor analysis, drug interaction
+  checking
+domain: ''
+program_goal: Perform domain-specific analysis accurately with correct calculations,
+  unit handling, and matching logic
+prerequisites:
+- All required input files must exist in the workspace before starting — never fabricate
+  missing input data
+- Read every document completely before beginning any analysis
 trigger_keywords:
 - clinical
 - medical
@@ -19,10 +27,35 @@ trigger_keywords:
 - hospital
 - diagnosis
 - drug
+- drug interaction
+- medication
 - market segment
 - competitor
 - trend
 - renewable
+common_pitfalls:
+- Never fabricate input data — if required files are missing, report the error instead
+  of creating fake data
+- 'When comparing pairs of items (e.g., drug interactions), normalize both sides:
+  use tuple(sorted([a.lower(), b.lower()])) for consistent matching regardless of
+  order or case'
+- 'For drug interaction reports: generate ALL patient-drug-interaction combinations.
+  For each patient, enumerate all unique pairs of their medications using itertools.combinations(meds,
+  2). Check each pair (in both directions) against the interaction database. Include
+  patients with no interactions as empty lists'
+- '''For clinical data: be precise with calculations and units. Report findings with''
+  appropriate clinical context'
+- Always verify numerical results by independently re-computing from source values
+- Use json.dumps() to serialize Python values — never str(True) which gives 'True'
+  instead of JSON true
+- 'When comparing pairs of items (e.g., drug interactions), normalize both sides:
+  use tuple(sorted([a.lower(), b.lower()])) for consistent matching regardless of
+  order or case. IMPORTANT: in the output, drug_a and drug_b MUST be in alphabetically
+  sorted order — always output pair[0].capitalize() as drug_a and pair[1].capitalize()
+  as drug_b, where pair = tuple(sorted([med1.lower(), med2.lower()]))'
+- 'For drug interaction output format: preserve the exact field names from the interaction
+  database (drug_a, drug_b, severity, effect). Output the patient keys in sorted
+  order'
 steps:
 - 'Step 1: Read all input data files carefully — medical records, market datasets,
   environmental measurements, energy output logs'

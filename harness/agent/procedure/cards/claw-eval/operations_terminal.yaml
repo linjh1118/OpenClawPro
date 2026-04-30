@@ -4,9 +4,18 @@
 
 - name: operations_terminal
   description: >
-    System operations and terminal command method: execute shell commands safely,
-    check system status, perform CRUD operations on inventory/resources,
-    verify operation results, handle errors gracefully
+    IT operations and incident management: SLA compliance audit, check ticket
+    response times, review helpdesk tickets, verify SLA thresholds, incident
+    postmortem analysis, automation failure recovery, troubleshoot scheduled jobs,
+    check system health, manage config integrations, investigate automation failures,
+    review knowledge base articles, suggest ticket resolutions, scheduled task management,
+    match knowledge base solutions to customer tickets, check article update dates,
+    identify outdated articles, mark tickets needing manual handling, fix disabled tasks,
+    adjust task schedules, send email notifications to ops team, check API integration config,
+    assess inventory data impact, correlate user tickets with failures, find troubleshooting guides.
+    运维故障排查：自动化任务连续失败、排查定时任务、检查API集成配置、关联用户工单、
+    知识库搜索解决方案、故障分析和恢复方案、整理定时任务、修复失败任务、发邮件通知。
+    工单知识库匹配：查看工单详情、搜索知识库文章、匹配解决方案、标注过时文章。
   domain: operations + terminal
   program_goal: Complete system administration and operations tasks using appropriate tools and commands
   prerequisites:
@@ -19,7 +28,27 @@
     - "Step 3: Verify the operation succeeded by checking the result or status"
     - "Step 4: If verification fails, diagnose the issue and retry with corrected parameters"
     - "Step 5: Report the final status clearly"
+  trigger_keywords:
+    - incident
+    - sla
+    - ticket
+    - helpdesk
+    - failure
+    - recovery
+    - scheduler
+    - health check
+    - alert
+    - monitor
+    - ops
+    - postmortem
+    - 故障
+    - 恢复
+    - 运维
+    - 工单
   common_pitfalls:
+    - "CRITICAL — Underusing tools: For multi-service tasks, query EACH service (helpdesk, scheduler, config, kb) independently. Do not skip services — missing data = low completion."
+    - "CRITICAL — Overusing tools: After retrieving data from a service, analyze it before calling more tools. Do NOT repeat the same query hoping for different results."
     - "Not verifying results: Always confirm the operation had the intended effect."
     - "Using wrong operation type: Double-check whether task requires create, update, or delete."
     - "Ignoring error messages: Error output contains important diagnostic information."
+    - "Shallow analysis: When investigating incidents or checking SLAs, extract specific numbers and dates from tool results — vague summaries get low scores."

@@ -4,9 +4,11 @@
 
 - name: user_agent_conversation
   description: >
-    User agent interaction method: understand simulated user persona,
-    actively identify missing information, ask targeted clarifying questions,
-    perform calculations with provided data, give personalized recommendations
+    User-agent interactive conversation: chat with a simulated user who has
+    a specific persona, answer technical questions about system configuration
+    (Docker, GPU, containers, deployment), provide configuration advice,
+    handle multi-turn dialogue, ask clarifying questions when requirements
+    are ambiguous, give step-by-step guidance.
   domain: user_agent
   program_goal: Guide conversation to gather complete information and provide personalized advice
   prerequisites:
@@ -20,7 +22,18 @@
     - "Step 4: Update your understanding based on user's response"
     - "Step 5: Perform calculations or analysis with the collected data"
     - "Step 6: Provide personalized recommendation with reasoning"
+  trigger_keywords:
+    - persona
+    - user agent
+    - conversation
+    - interactive
+    - dialogue
+    - 对话
+    - 交互
+    - 用户
   common_pitfalls:
-    - "Asking too many questions at once: Focus on the most critical missing information."
+    - "CRITICAL — Overusing web_search in conversation mode: If search fails 2-3 times, stop and use your own knowledge. The user is waiting for a conversation, not a search marathon."
+    - "Asking too many questions at once: Focus on the most critical missing information first."
     - "Dumping all persona details upfront: Let information emerge through conversation naturally."
-    - "Giving recommendations without sufficient data: Ensure all key parameters are collected."
+    - "Giving recommendations without sufficient data: Ensure all key parameters are collected before concluding."
+    - "CRITICAL — Not producing a final answer: Multi-turn conversations must converge. After gathering enough info, provide a clear, actionable answer — do not keep asking forever."

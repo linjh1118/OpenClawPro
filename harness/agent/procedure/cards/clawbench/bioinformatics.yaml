@@ -2,6 +2,13 @@ name: clawbench_official_bioinformatics
 description: Bioinformatics tasks — DNA/RNA sequence analysis, FASTA file parsing,
   GC content computation, ORF detection, phylogenetic analysis, genomic data processing
   with BioPython
+domain: ""
+program_goal: Process biological sequence data accurately and produce verified analysis
+  output
+prerequisites:
+- All required input files must exist in the workspace before starting — never fabricate
+  missing input data
+- Identify the sequence type (DNA, RNA, protein) and file format before processing
 trigger_keywords:
 - bioinformatics
 - genomic
@@ -21,6 +28,12 @@ trigger_keywords:
 - phylogenetic
 - sequence alignment
 - blast
+common_pitfalls:
+- Never fabricate input data — if required files are missing, report the error instead
+  of creating fake data
+- Always verify numerical results by independently re-computing from source values
+- Use json.dumps() to serialize Python values — never str(True) which gives 'True'
+  instead of JSON true
 steps:
 - 'Step 1: Read the FASTA or FASTQ input file — understand whether it contains DNA,
   RNA, or protein sequences'

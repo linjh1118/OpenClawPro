@@ -1,5 +1,10 @@
 name: clawbench_official_code_assistance
 description: Code implementation tasks — write Python code, implement algorithms, pytest unit tests with type annotations, write Token Bucket rate limiters, thread-safe data structures (stack, queue)
+domain: ""
+program_goal: Implement correct, well-tested code that passes all verification tests
+prerequisites:
+- Read the task specification completely before writing any code
+- Identify the required input/output format and all edge cases
 trigger_keywords:
   - code
   - python
@@ -21,6 +26,12 @@ trigger_keywords:
   - unit test
   - pytest
   - docstring
+common_pitfalls:
+- Never fabricate input data — if required files are missing, report the error instead
+  of creating fake data
+- Always verify code by running tests before completing — do not assume correctness
+- Use json.dumps() to serialize Python values — never str(True) which gives 'True'
+  instead of JSON true
 steps:
   - 'Step 1: Read the task description and any provided input files carefully — understand what needs to be implemented'
   - 'Step 2: Understand the expected input/output format. For algorithmic tasks: work through a few examples by hand'

@@ -3,8 +3,15 @@ description: Cross-domain synthesis and content analysis — product review sent
   classification using keyword scoring and aggregate sentiment dashboard, extract
   calendar entries from email messages (email to calendar synthesis), JSON to YAML
   conversion with nesting preservation, CSV to JSON merge, creative writing and data
-  visualization (matplotlib
-  charts, dashboards), synthesizing structured data from multiple input formats
+  visualization (matplotlib charts, dashboards), synthesizing structured data from
+  multiple input formats, readability analysis and content auditing
+domain: ''
+program_goal: Synthesize data from multiple sources and produce accurate analysis
+  or creative output matching the specification
+prerequisites:
+- All required input files must exist in the workspace before starting — never fabricate
+  missing input data
+- Identify all data sources and required output format before processing
 trigger_keywords:
 - creative
 - video
@@ -18,6 +25,28 @@ trigger_keywords:
 - cross-domain
 - sentiment
 - matplotlib
+- readability
+- content analysis
+- readability audit
+- fk grade
+- fog index
+- product review
+common_pitfalls:
+- CRITICAL — Never fabricate input data. If input files or directories are empty
+  or missing, STOP and report the error. Do NOT generate sample documents, test files,
+  or placeholder data — verification will check against the original inputs and fail
+- '''For sentiment analysis: use exact word boundary matching (regex \bword\b) and
+  ensure'' the word list and scoring logic exactly matches the task specification'
+- 'For readability metrics: use standard NLP sentence tokenization (split on . ! ?)
+  and word tokenization. Count syllables per word accurately (not just vowel counting).
+  FK Grade = 0.39*(words/sentences) + 11.8*(syllables/words) - 15.59. Fog = 0.4*((words/sentences)
+  + 100*(complex_words/words)). CLI = 0.0588*(chars/words*100) - 0.296*(sentences/words*100)
+  - 15.8. Verify values are in plausible ranges (FK: 0-20, Fog: 0-25)'
+- Always verify numerical results by independently re-computing from source values
+- Use json.dumps() to serialize Python values — never str(True) which gives 'True'
+  instead of JSON true
+- 'For sentiment analysis: do NOT round average_sentiment_score. Keep full float precision
+  (the verifier uses 1e-6 tolerance)'
 steps:
 - 'Step 1: Understand all input data sources (may span multiple formats: text, CSV,
   JSON, images)'

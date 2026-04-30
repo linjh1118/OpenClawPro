@@ -19,6 +19,13 @@
     - "Step 3: Perform calculations or analysis if numerical elements are involved"
     - "Step 4: Structure the answer clearly with evidence and reasoning"
     - "Step 5: Ask clarifying questions if key details are missing"
+  trigger_keywords:
+    - consultation
+    - expert
+    - guidance
+    - 咨询
+    - 建议
+    - 专家
   common_pitfalls:
     - "Answering without evidence: Always cite authoritative sources or provide calculations."
     - "Ignoring numerical aspects: Quantitative support significantly improves scores."

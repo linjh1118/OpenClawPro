@@ -19,7 +19,26 @@
     - "Step 3: Score each vendor against the criteria with numerical support"
     - "Step 4: Generate a comparative analysis table"
     - "Step 5: Provide recommendation with justification based on the analysis"
+  trigger_keywords:
+    - procurement
+    - vendor
+    - supplier
+    - purchase
+    - evaluation
+    - compare
+    - pricing
+    - inventory
+    - product
+    - crm
+    - quote
+    - 采购
+    - 供应商
+    - 评估
   common_pitfalls:
+    - "CRITICAL — Underusing tools: Must query ALL relevant services (inventory, finance, CRM, RSS, kb) before making evaluations. Incomplete data leads to wrong conclusions."
+    - "CRITICAL — Overusing tools: Do not query the same service repeatedly with the same parameters. Collect data once, analyze, then move on."
+    - "Not cross-referencing: Verify vendor/product information across multiple sources (inventory + CRM + finance)."
+    - "Fabricating comparisons: Every price, specification, or rating must come from tool results — never estimate."
+    - "Missing total cost analysis: Consider all factors (price, availability, ratings, delivery) not just one dimension."
     - "Not establishing clear evaluation criteria: Criteria should match business requirements."
-    - "Making recommendations without numerical support: Always include cost, timeline data."
-    - "Ignoring trade-offs: Acknowledge pros and cons of each vendor objectively."
+    - "Making recommendations without numerical support: Always include cost, timeline data from tools."

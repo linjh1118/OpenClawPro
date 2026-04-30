@@ -1,15 +1,20 @@
 name: requirement_conflict_resolution
 description: Identify and resolve conflicting, mutually exclusive, or logically contradictory requirements — recognize when two or more requirements demand incompatible outcomes that cannot all be satisfied simultaneously
-trigger_keywords:
-  - "mutually exclusive"
-  - "contradictory"
-  - "conflicting"
-  - "logically incompatible"
-  - "impossible constraint"
+domain: requirements
+program_goal: Detect logically impossible or contradictory requirements early, explain the conflict clearly, and propose the most practical alternative.
+prerequisites:
+  - All requirements must be enumerated and understood before attempting execution
+  - Ability to recognize logical incompatibility between constraints
 steps:
   - "Analyze all requirements for logical conflicts"
   - "Identify each conflict explicitly and explain why they cannot both be satisfied"
   - "Propose the most functional alternative that satisfies as many requirements as possible"
+common_pitfalls:
+  - "Attempting to satisfy mutually exclusive requirements: If two constraints logically conflict, no amount of cleverness can satisfy both — identify the conflict and communicate it"
+  - "Not recognizing implicit contradictions: Conflicts may be subtle — check for mathematical impossibilities, contradictory formatting rules, or opposing constraints"
+  - "Proposing alternatives that still conflict: Verify that your proposed solution actually resolves the contradiction, not just restates it differently"
+  - "Silently ignoring one requirement to satisfy another: Be explicit about which requirement you are deprioritizing and why"
+  - "Abandoning output format when rejecting a request: Even when a task is impossible, produce a response in the requested output format (file, report, etc.) explaining the conflict — a correct diagnosis without the required output artifact still scores zero on completion"
 examples:
   - "Correct: identify conflicting requirements → explain why they conflict → propose a workable alternative"
 compact: "Identify conflicting requirements — explain conflicts — propose the most functional alternative"

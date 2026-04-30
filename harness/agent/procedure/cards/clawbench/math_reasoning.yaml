@@ -2,6 +2,12 @@ name: clawbench_official_math_reasoning
 description: Mathematical reasoning tasks — solve financial math problems (NPV, IRR,
   compound interest), probability and statistics, equation solving, discrete math,
   optimization
+domain: ""
+program_goal: Solve mathematical problems with correct formulas and verified numerical
+  answers
+prerequisites:
+- Read all problem statements carefully before starting calculations
+- Identify knowns, unknowns, and the correct formula to apply
 trigger_keywords:
 - math
 - mathematics
@@ -27,6 +33,20 @@ trigger_keywords:
 - discount
 - compound
 - interest
+- t-test
+- cohen's d
+- statistical significance
+- json serialization
+common_pitfalls:
+- 'Never fabricate input data — if required files are missing, report the error instead
+  of creating fake data'
+- 'Always verify numerical results by plugging back into the original equation or using
+  a known special case'
+- 'Use json.dumps() to serialize Python values — never str(True) which gives ''True''
+  instead of JSON true. For statistical results, ensure ''significant'' is a boolean
+  (true/false), not a string'
+- '''For statistical tests: report both the test statistic and p-value with sufficient''
+  precision. Use absolute values for effect sizes when comparing against thresholds'
 steps:
 - 'Step 1: Read all problem statements carefully — understand what is being asked
   before starting calculations'

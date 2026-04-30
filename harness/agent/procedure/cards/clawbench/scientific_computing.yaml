@@ -2,6 +2,13 @@ name: clawbench_official_scientific_computing
 description: Scientific computing tasks — Lotka-Volterra predator-prey ODE, Runge-Kutta
   RK4 numerical solver, physics simulations, FFT signal processing, numerical integration
   for differential equations
+domain: ""
+program_goal: Solve scientific computing problems with correct numerical methods and
+  verified output
+prerequisites:
+- All required input files must exist in the workspace before starting — never fabricate
+  missing input data
+- Understand the equations, initial conditions, and boundary conditions before implementing
 trigger_keywords:
 - scientific computing
 - ode
@@ -21,6 +28,12 @@ trigger_keywords:
 - dynamics
 - fem
 - numerical integration
+common_pitfalls:
+- Never fabricate input data — if required files are missing, report the error instead
+  of creating fake data
+- Always verify numerical results for physical plausibility
+- Use json.dumps() to serialize Python values — never str(True) which gives 'True'
+  instead of JSON true
 steps:
 - 'Step 1: Read the problem specification — understand the differential equations,
   initial conditions, boundary conditions, and what to solve for'

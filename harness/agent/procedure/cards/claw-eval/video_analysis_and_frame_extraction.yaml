@@ -1,33 +1,63 @@
-# T4a: Program Support Card - Video Analysis and Frame Extraction
-# Domain: multimodal
-# Paper reference: T4a - Program Support Cards for skill availability
-
 - name: video_analysis_and_frame_extraction
-  description: Analyze video content to answer temporal and semantic queries, and produce output files by extracting or cropping specific frames
+  description: Analyze video content to answer temporal and semantic queries, and
+    produce output files by extracting or cropping specific frames
   domain: multimodal
-  program_goal: Systematically process video content to extract visual and semantic information and produce output artifacts.
+  program_goal: Systematically process video content to extract visual and semantic
+    information and produce output artifacts.
   prerequisites:
-    - Know the video file path and format
-    - Understand the task objective: whether it is understanding-only, or also requires producing output files
-    - For output tasks: know the required output format and file path
+  - Know the video file path and format
+  - Understand the task objective: whether it is understanding-only, or also requires
+      producing output files
+  - For output tasks: know the required output format and file path
   steps:
-    - "Step 1: Verify the video file exists and is accessible; check duration, resolution, and format"
-    - "Step 2: Determine an appropriate sampling strategy: uniform interval for continuous events, scene-change detection for discrete events, or targeted seeking for known timestamps"
-    - "Step 3: Extract key frames or segments systematically across the video timeline; maintain temporal context for each sample"
-    - "Step 4: Analyze each segment for relevant visual and auditory content; track the sequence of events over time"
-    - "Step 5: Correlate information across segments to answer temporal or comparative questions"
-    - "Step 6: For timestamp localization tasks: narrow down the exact start/end times by progressively refining the sampling window around the target event"
-    - "Step 7: For single-frame output tasks: select a representative frame from the target interval, apply the required crop or transformation, and save to the specified path with correct format"
-    - "Step 8: For multi-frame output tasks: systematically scan the full content to capture all instances; deduplicate visually similar frames; then compose the selected frames into a single output image with proper labeling under each frame"
-    - "Step 9: Verify all output files exist and are non-empty; for image outputs, check that the subject is centered, clearly visible, and correctly labeled"
-    - "Step 10: Synthesize findings with clear attribution to specific timestamps or segments"
+  - 'Step 1: Verify the video file exists and is accessible; check duration, resolution,
+    and format'
+  - 'Step 2: Determine an appropriate sampling strategy: uniform interval for continuous
+    events, scene-change detection for discrete events, or targeted seeking for known
+    timestamps'
+  - 'Step 3: Extract key frames or segments systematically across the video timeline;
+    maintain temporal context for each sample'
+  - 'Step 4: Analyze each segment for relevant visual and auditory content; track
+    the sequence of events over time'
+  - 'Step 5: Correlate information across segments to answer temporal or comparative
+    questions'
+  - 'Step 6: For timestamp localization tasks: narrow down the exact start/end times
+    by progressively refining the sampling window around the target event'
+  - 'Step 7: For single-frame output tasks: select a representative frame from the
+    target interval, apply the required crop or transformation, and save to the specified
+    path with correct format'
+  - 'Step 8: For multi-frame output tasks: systematically scan the full content to
+    capture all instances; deduplicate visually similar frames; then compose the selected
+    frames into a single output image with proper labeling under each frame'
+  - 'Step 9: Verify all output files exist and are non-empty; for image outputs, check
+    that the subject is centered, clearly visible, and correctly labeled'
+  - 'Step 10: Synthesize findings with clear attribution to specific timestamps or
+    segments'
   common_pitfalls:
-    - "Missing critical segments: Sparse sampling may skip key events; use adaptive sampling and refine where content changes."
-    - "Losing temporal context: Individual frames don't tell the full story; always track the sequence of events."
-    - "Inaccurate timestamp boundaries: When asked for exact intervals, verify boundary frames one-by-one rather than estimating."
-    - "Poor crop framing: When extracting a frame, ensure the target subject is centered and not clipped at the edge."
-    - "Missing instances: Scan the entire content thoroughly; a single pass may miss items that appear briefly."
-    - "Duplicate frames in composition: Visually similar frames should be deduplicated to keep only the clearest instance."
-    - "Over-relying on auto-generated captions: Always verify with visual evidence as cross-reference."
-    - "Failing to handle corrupted frames: Log and skip gracefully rather than aborting the entire process."
-    - "Not checking output file: Always verify the output file is created at the correct path before concluding the task."
+  - 'Missing critical segments: Sparse sampling may skip key events; use adaptive
+    sampling and refine where content changes.'
+  - 'Losing temporal context: Individual frames don''t tell the full story; always
+    track the sequence of events.'
+  - 'Inaccurate timestamp boundaries: When asked for exact intervals, verify boundary
+    frames one-by-one rather than estimating.'
+  - 'Poor crop framing: When extracting a frame, ensure the target subject is centered
+    and not clipped at the edge.'
+  - 'Missing instances: Scan the entire content thoroughly; a single pass may miss
+    items that appear briefly.'
+  - 'Duplicate frames in composition: Visually similar frames should be deduplicated
+    to keep only the clearest instance.'
+  - 'Over-relying on auto-generated captions: Always verify with visual evidence as
+    cross-reference.'
+  - 'Failing to handle corrupted frames: Log and skip gracefully rather than aborting
+    the entire process.'
+  - 'Not checking output file: Always verify the output file is created at the correct
+    path before concluding the task.'
+  trigger_keywords:
+  - video
+  - frame
+  - extract
+  - clip
+  - timestamp
+  - 视频
+  - 帧
+  - 剪辑

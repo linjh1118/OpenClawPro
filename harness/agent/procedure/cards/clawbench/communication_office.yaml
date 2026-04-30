@@ -3,7 +3,16 @@ description: Communication, email, and calendar scheduling — format messages f
   (Slack, Telegram, email), parse email messages (RFC 2822, MIME format), create calendar meetings
   with title, date, time, duration, participants, find free slots and set reminders, extract calendar
   events from emails (email to calendar synthesis), create ICS calendar files (VEVENT with DTSTART,
-  DTEND, SUMMARY), remember and recall information across multiple steps (session memory and persistence)
+  DTEND, SUMMARY), remember and recall information across multiple steps (session memory and persistence),
+  email filtering and sorting by date range and importance, multi-step instruction following
+domain: ""
+program_goal: Handle communication, email, calendar, and multi-step tasks accurately
+  with correct filtering, sorting, and data extraction
+prerequisites:
+- All required input files must exist in the workspace before starting — never fabricate
+  missing input data
+- Identify the exact task type (email parsing, filtering, calendar creation, multi-step
+  memory) before proceeding
 trigger_keywords:
   - email
   - calendar
@@ -28,6 +37,24 @@ trigger_keywords:
   - dtend
   - email header
   - parse email
+  - filter
+  - sort
+  - date range
+  - important
+  - multi-step
+  - instruction
+  - extract word
+common_pitfalls:
+- 'Never fabricate input data — if required files are missing, report the error instead
+  of creating fake data'
+- 'For date range filters: always use inclusive boundaries on BOTH start and end dates.
+  Test boundary cases explicitly (e.g., if end date is 2026-03-12, include items on
+  that date)'
+- 'When extracting the Nth word from each line, verify position indexing carefully —
+  test with a simple example to confirm 0-based vs 1-based counting'
+- 'Always verify numerical results by independently re-computing from source values'
+- 'Use json.dumps() to serialize Python values — never str(True) which gives the string
+  True instead of JSON boolean true'
 steps:
   - 'Step 1: Identify the task type: email drafting/parsing, calendar scheduling, workflow automation, or multi-session memory'
   - 'Step 2: For email tasks: parse email files (MIME format or raw text), extract headers (From, To, Subject, Date, Body), draft responses'

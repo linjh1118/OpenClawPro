@@ -2,7 +2,14 @@ name: clawbench_official_web_browsing_planning
 description: Project planning and web browsing tasks — extract user stories from
   product requirements documents, project phase planning with dependencies and effort
   estimation, fetch web pages and scrape HTML tables, REST API calls and HTTP requests,
-  URL-based data extraction
+  URL-based data extraction, HTML form analysis and field inventory
+domain: ""
+program_goal: Extract structured data from web sources or plan projects with accurate
+  output
+prerequisites:
+- All required input files must exist in the workspace before starting — never fabricate
+  missing input data
+- Identify the data source and target output format before processing
 trigger_keywords:
 - web
 - browse
@@ -14,6 +21,29 @@ trigger_keywords:
 - request
 - rest
 - endpoint
+- form inventory
+- html field
+- input type
+- select
+- textarea
+- html form
+- form element
+- validation
+- minlength
+- maxlength
+common_pitfalls:
+- 'CRITICAL — When web_search returns empty results (no internet or no matches) for
+  2-3 consecutive attempts, STOP searching immediately. Switch to using your own knowledge
+  to answer the question and produce the required output file. Wasting all turns on
+  failed searches results in zero completion score'
+- 'Never fabricate input data — if required files are missing, report the error instead
+  of creating fake data'
+- '''When parsing HTML forms, capture ALL element types: <input type=''text''>, <input type=''number''>,''
+  <select> (dropdown), <textarea> (multiline text). Also extract validation attributes:
+  min, max, minlength, maxlength, pattern, required'
+- 'Always verify numerical results by independently re-computing from source values'
+- 'Use json.dumps() to serialize Python values — never str(True) which gives ''True''
+  instead of JSON true'
 steps:
 - 'Step 1: Identify the target URL, API endpoint, or data source required for the
   task'

@@ -5,6 +5,13 @@ description: Security code review and system administration — scan source code
   scanning in git history, parse du -sh output to generate disk usage reports (top-N
   largest directories, total bytes), log file analysis with grep and awk, Linux
   filesystem analysis
+domain: ""
+program_goal: Perform security audits and system administration analysis accurately
+  with verified output
+prerequisites:
+- All required input files must exist in the workspace before starting — never fabricate
+  missing input data
+- Read all log files, system output, and source code before analysis
 trigger_keywords:
 - system admin
 - disk usage
@@ -25,6 +32,12 @@ trigger_keywords:
 - cve
 - nmap
 - server monitoring
+common_pitfalls:
+- Never fabricate input data — if required files are missing, report the error instead
+  of creating fake data
+- Always verify output by cross-referencing against the actual input files
+- Use json.dumps() to serialize Python values — never str(True) which gives 'True'
+  instead of JSON true
 steps:
 - 'Step 1: Read all provided input files (log files, filesystem output, security scan
   results) before analysis'

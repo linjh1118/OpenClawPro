@@ -1,25 +1,32 @@
-# T4a: Program Support Card - Information Organization
-# Domain: organization + memory
-# Assessment dimension: completion (35%) + content (40%) + trajectory (25%)
-
 - name: information_organization
-  description: >
-    Information organization and management method: gather information from multiple sources,
-    categorize and structure data logically, identify patterns and relationships,
-    organize output in clear, accessible format
+  description: 'Information organization and management method: gather information
+    from multiple sources, categorize and structure data logically, identify patterns
+    and relationships, organize output in clear, accessible format
+
+    '
   domain: organization + memory
-  program_goal: Systematically organize information from various sources into a coherent, well-structured output
+  program_goal: Systematically organize information from various sources into a coherent,
+    well-structured output
   prerequisites:
-    - Ability to gather data from multiple sources
-    - Can categorize and structure information logically
-    - Can identify important patterns or relationships
+  - Ability to gather data from multiple sources
+  - Can categorize and structure information logically
+  - Can identify important patterns or relationships
   steps:
-    - "Step 1: Gather all relevant information from available sources"
-    - "Step 2: Categorize and group information by relevant criteria"
-    - "Step 3: Identify key themes, patterns, or relationships"
-    - "Step 4: Structure the information in a clear, logical order"
-    - "Step 5: Present the organized information in an accessible format"
+  - 'Step 1: Gather all relevant information from available sources'
+  - 'Step 2: Categorize and group information by relevant criteria'
+  - 'Step 3: Identify key themes, patterns, or relationships'
+  - 'Step 4: Structure the information in a clear, logical order'
+  - 'Step 5: Present the organized information in an accessible format'
   common_pitfalls:
-    - "Missing important sources: Ensure all relevant data sources are consulted."
-    - "Poor organization: Structure should follow logical grouping and flow."
-    - "Incomplete output: All significant information should be included, not omitted."
+  - 'Missing important sources: Ensure all relevant data sources are consulted.'
+  - 'Poor organization: Structure should follow logical grouping and flow.'
+  - 'Incomplete output: All significant information should be included, not omitted.'
+  trigger_keywords:
+  - organize
+  - structure
+  - categorize
+  - group
+  - arrange
+  - 整理
+  - 组织
+  - 归档

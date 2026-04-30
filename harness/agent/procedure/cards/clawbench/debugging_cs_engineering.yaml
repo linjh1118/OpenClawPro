@@ -1,7 +1,13 @@
 name: clawbench_official_debugging_cs_engineering
 description: Debugging tasks — fix Python syntax errors, logic bugs, runtime crashes,
   off-by-one errors, TypeErrors, KeyErrors, IndexErrors; run pytest to reproduce and
-  verify all fixes
+  verify all fixes; multi-agent code review pipelines with bug fixing
+domain: ''
+program_goal: Identify and fix all bugs in code, ensuring every identified issue is
+  resolved and all tests pass
+prerequisites:
+- Read the test file and source code completely before making any changes
+- Identify ALL bugs listed or implied — do not stop after fixing the first one
 trigger_keywords:
 - debug
 - debugging
@@ -23,6 +29,26 @@ trigger_keywords:
 - buggy
 - incorrect
 - wrong result
+- code review
+- divide by zero
+- outlier filter
+common_pitfalls:
+- CRITICAL — Always use tools (exec, read_file, write_file) to analyze code, write
+  fixes, and verify results. NEVER respond with only a text/markdown explanation
+  without using tools. The grading system requires actual tool dispatches — pure
+  text answers score 0 for communication
+- Never fabricate input data — if required files are missing, report the error instead
+  of creating fake data
+- When fixing bugs in multi-file projects, ensure ALL identified bugs are fixed —
+  do not skip any. Re-run tests after each fix to confirm
+- Common overlooked fixes include divide-by-zero guards, comparison operators (>=
+  vs >), missing edge cases in filter functions, and missing return statements
+- After fixing, verify by re-running ALL tests — not just the ones that were previously
+  failing
+- 'For divide-by-zero: raise ZeroDivisionError or return float(''inf''), NOT ValueError'
+- 'For filter_outliers: carefully check whether the function should KEEP inliers (remove
+  outliers) or KEEP outliers. Test with the given data and verify the result matches
+  expectations'
 steps:
 - 'Step 1: Run the script or tests first to reproduce the error — do NOT guess the
   bug before running'

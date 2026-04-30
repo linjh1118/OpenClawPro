@@ -2,6 +2,12 @@ name: clawbench_official_real_tools
 description: Real tools and shell scripting tasks — git version control (clone, branch,
   commit, merge, rebase), bash scripting, HTTP REST API calls, Docker, package installation
   (pip, npm, conda)
+domain: ""
+program_goal: Execute tool and shell operations correctly, producing verified output
+prerequisites:
+- All required input files must exist in the workspace before starting — never fabricate
+  missing input data
+- Identify the exact tool operations required before proceeding
 trigger_keywords:
 - git
 - git operations
@@ -21,6 +27,12 @@ trigger_keywords:
 - build script
 - pipeline tool
 - subprocess
+common_pitfalls:
+- Never fabricate input data — if required files are missing, report the error instead
+  of creating fake data
+- Always verify script output by running it or checking expected output files
+- Use json.dumps() to serialize Python values — never str(True) which gives 'True'
+  instead of JSON true
 steps:
 - 'Step 1: Read the task specification to understand what tool operations are required
   (git commands, bash script logic, API endpoints)'

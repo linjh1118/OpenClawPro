@@ -1,6 +1,14 @@
 name: clawbench_official_research_academic
 description: Academic and educational tasks — BibTeX citation network analysis with
-  networkx, rubric-based essay grading, literature review writing, course grade computation
+  networkx, rubric-based essay grading, literature review writing, course grade computation,
+  statistical analysis with t-tests and effect sizes, plagiarism checking
+domain: ""
+program_goal: Perform academic and research tasks accurately with correct analysis
+  and verified output
+prerequisites:
+- All required input files must exist in the workspace before starting — never fabricate
+  missing input data
+- Read all provided source materials completely before analysis
 trigger_keywords:
 - research
 - academic
@@ -21,6 +29,22 @@ trigger_keywords:
 - homework
 - exam
 - score
+- t-test
+- cohen's d
+- statistical analysis
+- statistical significance
+- p-value
+- effect size
+- json serialization
+common_pitfalls:
+- 'Never fabricate input data — if required files are missing, report the error instead
+  of creating fake data'
+- 'Use json.dumps() to serialize Python values — never str(True) which gives ''True''
+  instead of JSON true. For statistical results, ''significant'' must be a boolean not
+  a string'
+- '''For statistical tests: report both test statistic and p-value with sufficient precision.''
+  Use absolute values for effect sizes when comparing against thresholds'
+- 'Do not fabricate citations or academic claims — use only evidence from provided sources'
 steps:
 - 'Step 1: Read all provided input files (BibTeX files, essays, rubrics, problem sets,
   course data)'

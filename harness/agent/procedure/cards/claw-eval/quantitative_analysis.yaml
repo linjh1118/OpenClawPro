@@ -1,25 +1,51 @@
-# T4a: Program Support Card - Quantitative Analysis
-# Domain: quantitative
-# Assessment dimension: numerical (35% weight - highest)
-
 - name: quantitative_analysis
   description: >
-    quantitative technical analysis method: statistical distribution analysis,
-    probability estimation using computation tools, parameter calculation
-    based on observed data patterns, percentile analysis,
-    numerical computation for technical decisions
+    Quantitative and numerical analysis: statistical calculations, financial metrics,
+    compound growth rates, geometric/arithmetic means, probability estimation,
+    parameter computation from observed data, percentile analysis, numerical
+    computation for technical and financial decisions.
+    Covers CAGR, geometric mean, growth rate, financial ratio analysis, and
+    any task requiring precise numerical computation with exec/tools.
   domain: quantitative
-  program_goal: Support technical decisions with quantitative data and statistically-grounded recommendations
+  program_goal: Support technical decisions with quantitative data and statistically-grounded
+    recommendations through actual computation
   prerequisites:
-    - Ability to use calculation tools for numerical computation
-    - Understanding of basic statistical distributions (normal, lognormal, empirical)
-    - Ability to translate business requirements into numerical constraints
+  - Ability to use calculation tools for numerical computation
+  - Understanding of basic statistical distributions (normal, lognormal, empirical)
+  - Ability to translate business requirements into numerical constraints
   steps:
-    - "Step 1: Identify what numerical parameters and values are needed for the analysis"
-    - "Step 2: Use appropriate tools to calculate or estimate numerical values"
-    - "Step 3: Provide quantitative evidence supporting the recommended approach"
-    - "Step 4: Present the reasoning chain from data to conclusion with numerical support"
+  - 'Step 1: READ the task files first. Use list_dir to find files, then read_file to extract source data. Many calculation tasks provide numbers in files — you MUST find and read them before doing anything else.'
+  - 'Step 2: Identify what numerical parameters are needed and the exact formula to apply.'
+  - 'Step 3: Use exec (python3 -c "...") to perform the calculation. Do NOT compute mentally — always run code.'
+  - 'Step 4: Present the final numerical answer clearly with the formula, intermediate steps, and result.'
   common_pitfalls:
-    - "Not performing any numerical analysis: This dimension has 35% weight, qualitative answers score at most 0.4."
-    - "Failing to provide numerical evidence: Always include estimates or calculations when applicable."
-    - "Presenting numbers without explaining methodology: Show the calculation approach."
+  - 'CRITICAL — Read task files FIRST: Most calculation tasks embed source data in files. Use list_dir → read_file to find data BEFORE calculating. Skipping this step means you fabricate numbers and get 0 completion.'
+  - 'CRITICAL — Must use exec: Calculate using python3 code, NOT mental arithmetic. A response with 0 exec calls gets severely penalized.'
+  - 'CRITICAL — Wrong formula: Double-check which formula applies (CAGR vs simple growth, geometric vs arithmetic mean, etc.).'
+  - 'CRITICAL — Do not explore filesystem aimlessly: After reading files, immediately proceed to exec for calculation. Browsing directories without computing wastes iterations.'
+  - 'CRITICAL — Show complete methodology: After computing, present the formula, ALL input values used, intermediate computation steps, and the final result with units. A bare <FINAL_ANSWER> tag alone scores 0 on methodology.'
+  - 'Not performing any numerical analysis: This dimension has 35% weight, qualitative answers score at most 0.4.'
+  trigger_keywords:
+  - quantitative
+  - calculate
+  - statistics
+  - aggregate
+  - CAGR
+  - growth rate
+  - geometric mean
+  - compound
+  - annual
+  - percentile
+  - median
+  - 量化
+  - 计算
+  - 统计
+  - 增长率
+  - 平均数
+  - 几何平均
+  - 基金
+  - 信托
+  - 复合
+  - 年均
+  - 产量
+  - 产值

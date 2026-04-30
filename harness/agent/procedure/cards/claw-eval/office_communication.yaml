@@ -4,9 +4,15 @@
 
 - name: office_communication
   description: >
-    Office communication handling method: retrieve messages from inbox,
-    classify and categorize correctly, compose appropriate responses,
-    manage email/inbox operations with proper categorization
+    Email inbox triage and office communication: sort and classify emails
+    into categories (needs reply, notification, spam, junk), read each message
+    from inbox (gmail), draft replies for important emails, save drafts,
+    identify which emails need response vs FYI vs junk.
+    Also covers email reply drafting: read incoming emails, understand context
+    and tone, compose professional reply drafts, save to drafts folder,
+    check inbox for important emails that need replies, draft email responses.
+    邮箱分类：帮我分一下邮箱、哪些要回、哪些是通知、哪些是垃圾邮件。
+    邮件回复起草：看看收件箱有什么重要邮件要回的、帮我起草好存草稿。
   domain: office_qa + communication
   program_goal: Efficiently handle office communication tasks including email triage, classification, and response drafting
   prerequisites:
@@ -20,8 +26,24 @@
     - "Step 4: Take appropriate action for each category (reply to urgent, archive FYI, flag for follow-up, etc.)"
     - "Step 5: When drafting replies, ensure tone matches the original message and addresses all questions"
     - "Step 6: Verify categorization is correct and no messages are missed or miscategorized"
+  trigger_keywords:
+    - email
+    - inbox
+    - triage
+    - classify
+    - spam
+    - draft
+    - reply
+    - gmail
+    - 邮件
+    - 分类
+    - 回复
   common_pitfalls:
-    - "Missing messages: Always retrieve the full inbox or all relevant folders."
-    - "Incorrect categorization: Follow the task's specific categorization criteria (reply needed vs FYI vs spam)."
-    - "Generic responses: When replying, address the specific questions and points in the original message."
-    - "Not using tool results: Base your actions on the actual data retrieved from services, not assumptions."
+    - "CRITICAL — Zero tool calls: You MUST call at least one tool before giving your final answer. A pure text response with 0 tool calls is severely penalized regardless of quality."
+    - "CRITICAL — Search loop: If web_search returns empty 2-3 times, STOP and use your own knowledge. Do not burn all your turns on failed searches."
+    - "CRITICAL — Underusing tools: Must call list_messages FIRST to see the full inbox, then get_message for EACH item before classifying. Skipping messages = incomplete answer = low score."
+    - "Missing messages: Always retrieve the full inbox or all relevant folders — never classify based on assumptions."
+    - "Incorrect categorization: Follow the task's specific categorization criteria exactly (reply needed vs FYI vs spam)."
+    - "Generic responses: When replying, address the specific questions and points in the original message — generic text gets low scores."
+    - "Not using tool results: Base EVERY detail in your answer on actual data returned by tools. Do not fabricate subject lines, sender names, or dates."
+    - "CRITICAL — One-shot answering: Never output your final answer after a single tool call. Always verify you have ALL needed information before composing the response."

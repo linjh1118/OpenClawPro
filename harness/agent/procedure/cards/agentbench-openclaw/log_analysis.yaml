@@ -1,18 +1,10 @@
 name: log_and_event_analysis
 description: Parse and analyze log files and timestamped events — extract entries, build event sequences, identify patterns
-trigger_keywords:
-  - "log"
-  - "event"
-  - "timestamp"
-  - "trace"
-  - "error log"
-  - "incident"
-  - "hallucinate"
-  - "fabricate"
-  - "make up"
-  - "missing file"
-  - "does not exist"
-  - "not found"
+domain: log_analysis
+program_goal: Extract accurate event sequences from log data, identify the true root cause of issues based on actual log entries, and report only what the logs actually contain.
+prerequisites:
+  - Log files must exist and be accessible — verify file presence before analysis
+  - Understand the log format (timestamp format, severity levels, field separators)
 steps:
   - "Read log files to understand their format and content"
   - "Parse entries by type and timestamp"
@@ -20,6 +12,11 @@ steps:
   - "Identify the source or cause of issues"
   - "When a referenced log file does not exist at the expected path: report the missing file explicitly — do NOT fabricate or create fake log data"
   - "Search common alternative locations if the file is not found at first location — do not hallucinate content to replace a missing file"
+common_pitfalls:
+  - "Fabricating log entries: Never describe events or error patterns that do not appear in the actual log content — report only what you can see"
+  - "Reading only the first few lines of large log files: Important events may appear anywhere in the file — read the complete file or use targeted searches"
+  - "Reporting generic causes without evidence: 'Memory exhaustion' or 'connection pool failure' must be backed by specific log lines — do not guess"
+  - "Missing the root cause by stopping at the first error: The first error is often a symptom — trace the chronological sequence to find the originating event"
 examples:
   - "Correct: read logs → parse by timestamp → identify patterns → report findings"
   - "Correct: understand event sequence → determine what caused the issue"

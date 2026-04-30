@@ -1,21 +1,22 @@
 name: structured_data_extraction
 description: Extract structured fields from unstructured or semi-structured source documents — identify attendees, decisions, action items, and key points from meeting notes, transcripts, or documents; organize scattered details into well-formatted structured output
-trigger_keywords:
-  - "extract structured"
-  - "meeting notes"
-  - "transcript"
-  - "action items"
-  - "attendees"
-  - "decisions"
-  - "key points"
-  - "structured data"
-  - "summary"
-  - "parse"
+domain: data_extraction
+program_goal: Faithfully extract all relevant structured information from source documents and organize it into the requested output format without adding or inventing content.
+prerequisites:
+  - Source document must be fully readable and parseable
+  - Target output format and required fields must be identified
 steps:
+  - "If the source is a structured file (JSON, CSV, XML), validate it parses correctly before extraction — if parsing fails, report the corruption and do NOT fabricate content"
   - "Read the entire source document to understand its format and content"
   - "Identify and extract all instances of each required field type (names, dates, decisions, action items)"
   - "Organize extracted information into the requested structured format"
   - "Create the output file with all required sections properly formatted"
+common_pitfalls:
+  - "Partial source reads: Reading only the first portion of a document causes you to miss entries that appear later — always read the complete source"
+  - "Inventing entries not present in the source: Only include items actually found in the document — do not fabricate attendees, decisions, or action items"
+  - "Missing entries because they appear in an unexpected format: Action items may be phrased as suggestions, decisions may be implicit — read carefully for indirect references"
+  - "Output format mismatch: Follow the exact structure requested (markdown sections, JSON keys, etc.) — do not improvise a different organization"
+  - "Missing required output elements: After writing the output file, re-read it and verify every required element (headers, footers, timestamps, metadata) is present — omitting a single required element can nullify otherwise correct work"
 examples:
   - "Correct: read full transcript → extract all names, decisions, action items → organize into structured sections"
   - "Correct: scan meeting notes for attendees, decisions, and tasks → output as organized markdown"

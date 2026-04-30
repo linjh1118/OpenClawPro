@@ -1,16 +1,19 @@
 name: dependency_mapping
 description: Map and document dependencies between modules or components
-trigger_keywords:
-  - "dependency"
-  - "depends on"
-  - "related"
-  - "interconnected"
-  - "cross-reference"
-  - "module"
+domain: code_analysis
+program_goal: Produce a complete and accurate map of all dependencies between modules or components, ensuring no relationship is missed.
+prerequisites:
+  - All relevant source files must be accessible
+  - Understand what constitutes a dependency in the given context (imports, function calls, data flow)
 steps:
   - "Identify what each module or component depends on"
   - "Create structured records documenting those relationships"
   - "Verify all referenced dependencies are accounted for"
+common_pitfalls:
+  - "Incomplete dependency discovery: Search for all types of dependencies — imports, function calls, shared state, configuration references — not just obvious imports"
+  - "Creating only headers without content: Each dependency record should describe the nature of the relationship, not just list the names"
+  - "Missing implicit dependencies: Some dependencies are indirect (e.g., module A calls module B which calls module C) — trace the full chain"
+  - "Leaving sections empty after editing: After modifying a structured file, re-read it and confirm every section or field contains actual content — do not leave placeholders, headers without body, or blank sections"
 examples:
   - "Correct: identify dependencies → document relationships → check all are accounted for"
 compact: "Identify and document module dependencies — verify all references are valid"

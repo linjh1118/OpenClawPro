@@ -1,23 +1,22 @@
 name: read_only_file_review
 description: Review and analyze files without making modifications — read files carefully, identify factual errors or inconsistencies, report findings accurately, and preserve the original file unchanged; do not edit, rewrite, or "fix" anything unless explicitly asked
-trigger_keywords:
-  - "review"
-  - "report"
-  - "factual error"
-  - "inconsistency"
-  - "read only"
-  - "do not change"
-  - "do not modify"
-  - "don't change"
-  - "find errors"
-  - "check accuracy"
-  - "verify"
+domain: document_review
+program_goal: Read entire files thoroughly, identify all factual errors and inconsistencies, and deliver a complete review report without modifying the source.
+prerequisites:
+  - The target file must be fully readable — no partial or truncated reads
+  - Understand what types of errors to look for (numerical, factual, logical inconsistencies)
 steps:
-  - "Read the file completely to understand its full content"
+  - "Read the ENTIRE file using cat — do NOT use head, tail, or partial reads that may cut off content"
   - "Analyze the content for factual errors, inconsistencies, or problems"
   - "Report findings clearly and specifically — quote the actual content when pointing out errors"
   - "Do NOT modify the file or suggest rewrites unless explicitly asked"
   - "Return a clear report of what you found, not a revised version"
+common_pitfalls:
+  - "Partial file reads: Reading only the beginning of a file causes you to miss errors in later sections — always read the complete file"
+  - "Output truncation: Long review reports may be cut off — keep the report concise and prioritize the most important findings first, then add detail"
+  - "Accidentally modifying the file: When the task says review-only, never use write or edit tools on the source file"
+  - "Vague error reports: 'There is an inconsistency' is not useful — quote the exact text and explain what is wrong"
+  - "Missing the end of the file: Some errors are placed near the end of documents specifically to test whether you read the whole thing"
 examples:
   - "Correct: read report → identify factual inconsistencies → report 'the team grew from 9 to 14 but only 3 new hires are mentioned'"
   - "Correct: read carefully → report errors without changing the file"

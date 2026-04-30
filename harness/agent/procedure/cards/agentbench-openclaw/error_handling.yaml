@@ -1,23 +1,10 @@
 name: error_diagnosis_and_fix
 description: Diagnose, detect, and fix errors — reproduce errors directly, identify the underlying cause, apply targeted fixes, handle corrupted inputs gracefully instead of hallucinating results; when an input file is missing, corrupted, or malformed, report the specific problem explicitly rather than fabricating data or inventing content
-trigger_keywords:
-  - "silent failure"
-  - "debug"
-  - "error"
-  - "crash"
-  - "missing file"
-  - "does not exist"
-  - "not found"
-  - "corrupted"
-  - "data loss"
-  - "missing records"
-  - "malformed"
-  - "parse"
-  - "invalid"
-  - "broken"
-  - "hallucinate"
-  - "fabricate"
-  - "make up"
+domain: debugging
+program_goal: Systematically reproduce, diagnose, and resolve errors while never fabricating results — always report the actual state of inputs and outputs.
+prerequisites:
+  - The failing system or code must be runnable to observe the actual error
+  - Access to the relevant files, logs, or inputs that trigger the failure
 steps:
   - "Run the failing code directly to observe the actual error — do not assume you know the problem"
   - "Diagnose the underlying cause by examining what went wrong in the actual execution"
@@ -25,6 +12,12 @@ steps:
   - "For missing or nonexistent files: report that the file is missing — do NOT fabricate or invent content from a file that does not exist"
   - "Fix the actual source of the problem, not just the symptom — or document the corruption if it cannot be fixed"
   - "Re-run after fixing to confirm the problem is resolved"
+common_pitfalls:
+  - "Fabricating content for missing files: If a file does not exist, report it explicitly — never invent data to fill the gap"
+  - "Fixing symptoms instead of root causes: A surface-level patch may pass one test but fail in other cases — trace the error to its origin"
+  - "Assuming the error message is accurate: Error messages can be misleading — verify by reproducing the actual failure yourself"
+  - "Exhaustive exploration causing timeouts: When debugging, hypothesize the most likely cause first, test it, and iterate — avoid reading every file before forming a hypothesis"
+  - "Not verifying the fix: After applying a change, re-run to confirm the error is gone and no new errors appeared"
 examples:
   - "Correct: reproduce the error → identify the cause → fix it → verify the fix works"
   - "Correct: run the code → see what happens → address the real issue"

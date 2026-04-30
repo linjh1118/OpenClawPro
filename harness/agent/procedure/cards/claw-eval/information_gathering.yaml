@@ -1,25 +1,68 @@
-# T4a: Program Support Card - Information Gathering
-# Domain: information_gathering
-# Assessment dimension: clarification (15%) + numerical (35%)
-
 - name: information_gathering
   description: >
-    research and information synthesis method: collect relevant data from available sources,
-    analyze patterns and extract insights, synthesize findings into actionable recommendations,
-    provide quantitative evidence and qualitative analysis
+    Research and calculation: gather information, compute specific numbers (tax, cost, pricing),
+    cite regulation articles, and give ONE definitive answer with risk warnings.
+    消防验收、造价行情、个税计算、规范条文引用。
   domain: information_gathering
-  program_goal: Gather and synthesize information to provide comprehensive, evidence-based recommendations
-  prerequisites:
-    - Ability to search and collect relevant information
-    - Understanding of how to analyze data patterns
-    - Can translate findings into actionable recommendations
+  program_goal: Provide ONE precise answer with calculation evidence and risk analysis
   steps:
-    - "Step 1: Identify what information is needed and gather relevant data"
-    - "Step 2: Analyze the data to extract patterns and insights"
-    - "Step 3: Synthesize findings with both quantitative evidence and qualitative analysis"
-    - "Step 4: Provide actionable recommendations based on the synthesized information"
+  - 'Step 1: Before searching or calculating, identify what key parameters are missing and ask the user for them first. Common gaps: dimensions, quantities, dates, rates, specific conditions.'
+  - 'Step 2: web_search 最多调用1次。调用后无论结果是否为空，立即转入 Step 3 用 exec 计算。禁止对同一话题换词重搜。如果搜索返回了有用结果，提取数据后直接进入计算；如果为空，用内部知识+exec估算，并在答案中标注"以下数据基于估算"。'
+  - 'Step 3: Use exec to compute precise numbers. Then give EXACTLY ONE recommended value — NOT a range.'
+  - 'Step 4: Cite specific regulation articles or standards if relevant (e.g. "GB50016-2014 第5.5.18条").'
+  - 'Step 5: List 2-3 practical risks or compliance warnings, plus concrete actionable next steps the user can take.'
+  - 'Step 6: If your calculation contradicts the user''s expectation → explicitly explain WHY and what might cause the difference.'
   common_pitfalls:
-    - "Gathering insufficient information: Ensure enough data points for reliable analysis."
-    - "Missing quantitative support: Include numerical evidence when available."
-    - "Providing vague recommendations: Make recommendations specific and actionable."
-    - "Not verifying information accuracy: Check facts before synthesizing."
+  - 'CRITICAL — Ask before calculating: Never assume parameter values. If the user hasn''t provided a key number, ask first.'
+  - 'CRITICAL — Multiple searches waste turns: web_search returns empty here. After 1-2 empty results, STOP searching and use exec.'
+  - 'CRITICAL — 搜索死循环：严禁对同一查询换词重搜超过1次。每次 web_search 后必须立即切换到 exec 或直接回答，不允许连续多次搜索。如果搜索为空，在回复中明确说"搜索未返回结果，以下基于行业常识估算"，然后给计算结果。'
+  - 'CRITICAL — 假设必须标注：当使用未经验证的参数（如钢材单价、面积等非用户提供的数据）进行计算时，必须在结果前逐条列出所有假设值及其来源（"假设：XX = YY，依据：行业常见范围"）。不得将假设值与用户提供的事实混为一谈。'
+  - 'CRITICAL — No exec = low score: You MUST run python3 -c to calculate. Pure text answers get < 0.4 completion.'
+  - 'CRITICAL — Vague ranges penalized: "600-900元" = FAIL. Pick ONE number (e.g. "推荐值630元") and justify it.'
+  - 'CRITICAL — No actionable advice: After giving numbers, always include concrete next steps (e.g., "去APP里操作XX", "补充准备XX材料").'
+  - 'CRITICAL — Missing contradiction: If user says X but you calculate Y, you MUST explain the gap.'
+  knowledge_hints:
+  - '建筑消防：GB50016-2014《建筑设计防火规范》第5章民用建筑，5.5节安全疏散和避难。商业建筑疏散宽度需同时满足两个条件：按人数计算的总宽度（疏散人数×百人宽度指标）和最小净宽下限。疏散人数=面积×人员密度，人员密度查表5.5.21-2。百人宽度指标查表5.5.21-1。'
+  - '建筑抗震：GB50011《建筑抗震设计规范》对非结构构件(幕墙/悬挑/吊顶)的抗震验算有专门要求，需关注连接节点的抗震承载力、层间位移角对构件的影响、以及构件重要性系数。'
+  - '钢网架造价：估算方法=用钢量(kg/m²)×钢材单价+制作安装费+围护系统费用。用钢量与跨度、荷载、节点形式(螺栓球/焊接球)相关。需分别估算结构部分和围护部分。'
+  - '个税年终奖：有两种计税方式(单独计税 vs 并入综合所得)，七级超额累进税率3%-45%，起征点5000元/月，专项附加扣除含子女教育/继续教育/住房贷款/住房租金/赡养老人/大病医疗。汇算清缴时需比较两种方式哪个更优。年终奖单独计税政策已延续至2027年底。用exec计算具体金额。'
+  - '通用建议：涉及法规咨询的问题，除给出数值结论外，还应提醒用户实际操作中可能遇到的常见风险、需要额外准备的材料、以及后续跟进步骤。'
+  trigger_keywords:
+  - survey
+  - specification
+  - regulation
+  - pricing
+  - cost
+  - seismic
+  - structural
+  - facade
+  - cantilever
+  - building code
+  - earthquake
+  - GB
+  - 数据收集
+  - 调研
+  - 规范
+  - 行情
+  - 造价
+  - 税
+  - 验收
+  - 消防
+  - 疏散
+  - 条文
+  - 补税
+  - 年终奖
+  - 个税
+  - 计税
+  - 抗震
+  - 钢材
+  - 每平米
+  - 钢网架
+  - 汇算
+  - 专项附加
+  - 起征点
+  - 商业空间
+  - 幕墙
+  - 悬挑
+  - 地震
+  - 结构设计

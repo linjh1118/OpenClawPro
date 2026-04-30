@@ -1,19 +1,20 @@
 name: multi_module_project_structure
 description: Scaffold and wire multi-module projects with cross-module dependencies
-trigger_keywords:
-  - "multi-module"
-  - "cross-module"
-  - "interdependent"
-  - "import resolution"
-  - "package"
-  - "scaffold"
-  - "library"
-  - "components"
+domain: code_editing
+program_goal: Create a correctly structured multi-module project where all imports resolve, initialization files are present at every level, and cross-module dependencies are properly wired.
+prerequisites:
+  - The project specification must define all modules and their relationships
+  - Understand Python package conventions (init files, relative imports, module paths)
 steps:
   - "Read the specification to understand all modules and their relationships"
   - "Create the package directory structure with initialization files at every level"
   - "Write cross-module imports carefully to avoid circular dependency issues"
   - "Verify all module dependencies resolve correctly"
+common_pitfalls:
+  - "Missing __init__.py files: Every package directory needs an __init__.py — missing one makes the directory invisible to Python imports"
+  - "Circular imports: If module A imports from module B and B imports from A, use lazy imports or restructure the dependency"
+  - "Wrong import paths: After creating the directory structure, test each import statement to confirm the path resolves correctly"
+  - "Incomplete scaffolding: Follow the specification exactly — missing a module or file leaves the project broken"
 examples:
   - "Correct: understand architecture → create directory structure → wire imports → verify dependencies"
 compact: "Create package structure — wire cross-module imports — verify all dependencies resolve"

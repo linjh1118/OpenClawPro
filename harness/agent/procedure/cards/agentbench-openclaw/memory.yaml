@@ -1,26 +1,22 @@
 name: cross_session_memory
 description: Remember and apply rules and constraints across multiple turns — when a requirement, convention, or formatting rule is introduced in one turn, store it and apply it consistently in all subsequent turns; when asked to recall user preferences or stored information, read the designated memory files first and do not invent preferences that are not stored there
-trigger_keywords:
-  - "remember"
-  - "memory"
-  - "accumulate"
-  - "constraints"
-  - "earlier"
-  - "session"
-  - "persist"
-  - "recall"
-  - "previous"
-  - "rule"
-  - "formatting"
-  - "across turns"
-  - "user preference"
-  - "memory file"
+domain: multi_turn
+program_goal: Maintain an accurate, evolving record of all rules, constraints, and preferences introduced during a multi-turn conversation, and apply every accumulated rule to all subsequent outputs.
+prerequisites:
+  - A mechanism to persist rules between turns (memory file, scratchpad, or notes section)
+  - Understanding that constraints accumulate and must all be satisfied simultaneously
 steps:
   - "When a rule or constraint is introduced, write it down for future reference"
   - "In subsequent turns, check your stored notes before generating output"
   - "Apply all accumulated rules simultaneously — not just the most recent one"
   - "When asked to recall user preferences, check the designated memory file(s) first — do not invent or hallucinate preferences that are not stored"
   - "When asked to store a preference, write it to the designated memory file using the proper format"
+common_pitfalls:
+  - "Applying only the most recent rule while forgetting earlier ones: Before producing any output, re-read ALL accumulated rules and verify each one is satisfied"
+  - "Drifting from formatting conventions across turns: If turn 1 introduced kebab-case filenames or British spelling, every subsequent turn must follow the same convention — do not revert to defaults"
+  - "Hallucinating stored preferences: Never invent content for memory files — only write what was explicitly stated, and only read what is actually in the file"
+  - "Overwriting previous rules with new ones: Constraints accumulate, they do not replace — keep a running list and apply all items"
+  - "Not verifying output against all constraints before finishing: Do a final pass checking each rule against the actual output content"
 examples:
   - "Correct: store rules when introduced → retrieve and apply all of them in later turns"
   - "Correct: keep a memory file → consult it in each new session"

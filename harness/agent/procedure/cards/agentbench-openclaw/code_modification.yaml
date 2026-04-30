@@ -1,21 +1,20 @@
 name: code_modification
 description: Modify and refactor existing code — fix bugs, update logic, add functionality to existing files
-trigger_keywords:
-  - "modify"
-  - "change"
-  - "refactor"
-  - "fix"
-  - "add to"
-  - "edit"
-  - "update"
-  - "code"
-  - "function"
-  - "class"
+domain: code_editing
+program_goal: Make precise, targeted code changes that fix the intended issue without introducing regressions or unintended side effects.
+prerequisites:
+  - Understand the surrounding code context and dependencies before editing
+  - Identify the exact scope of the required change
 steps:
   - "Read the surrounding code to understand its structure and dependencies before making changes"
   - "Make the modification precisely — change only what is needed"
   - "Verify the change is syntactically correct"
   - "Run the code to confirm the change works as expected"
+common_pitfalls:
+  - "Editing without understanding context: Changing a function without knowing its callers can break downstream code — read related files first"
+  - "Over-editing: Do not reformat, rename unrelated variables, or make improvements beyond what the task asks — change only what is necessary"
+  - "Not testing the change: Always run the code after modification to confirm the fix works and nothing else broke"
+  - "Missing dependent updates: If you change a function signature, all callers must be updated — search for all references before and after editing"
 examples:
   - "Correct: read context → make targeted change → verify it works"
   - "Correct: understand the existing structure before editing"

@@ -1,16 +1,10 @@
 name: codebase_refactoring
 description: Execute structured code refactoring across multiple files — read a refactoring plan, split a monolithic module into focused sub-modules, update all import statements in consumer files, run tests to verify correctness, and commit each logical step separately
-trigger_keywords:
-  - "refactor"
-  - "split module"
-  - "update imports"
-  - "refactoring plan"
-  - "extract module"
-  - "modularize"
-  - "separate concerns"
-  - "run tests"
-  - "pytest"
-  - "git commit"
+domain: code_editing
+program_goal: Restructure a codebase into a cleaner architecture while preserving all existing functionality, verified by passing tests at each step.
+prerequisites:
+  - The refactoring plan or target structure must be understood completely
+  - All existing tests must pass before starting — they are the safety net
 steps:
   - "Read the refactoring plan to understand target module structure"
   - "Identify all functions/classes to extract and their dependencies"
@@ -19,6 +13,12 @@ steps:
   - "Run the test suite to verify refactoring did not break functionality"
   - "Delete the original monolithic file only after all tests pass"
   - "Commit each logical step with a descriptive message"
+common_pitfalls:
+  - "Missing import updates: After moving code, every file that imports from the old location must be updated — search exhaustively for all references"
+  - "Deleting the original file too early: Only remove the old file after confirming all tests pass with the new structure"
+  - "Circular imports: When splitting modules, ensure the dependency graph is acyclic — import each new module to verify no circular dependency errors"
+  - "Incomplete refactoring plan execution: Follow every step of the plan — skipping a step leaves the codebase in an inconsistent state"
+  - "Not running tests between steps: Run tests after each logical change to catch regressions early when they are easy to diagnose"
 examples:
   - "Correct: read plan → extract target modules → update all imports → run pytest → commit each step"
   - "Correct: split monolithic file into focused modules → update consumer files → verify tests → commit"

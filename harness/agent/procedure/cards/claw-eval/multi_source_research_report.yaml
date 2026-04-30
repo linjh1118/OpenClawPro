@@ -1,26 +1,43 @@
-# T4a: Program Support Card - Multi-Source Research and Reporting
-# Domain: research
-# Paper reference: T4a - Program Support Cards for skill availability
-
 - name: multi_source_research_report
-  description: Systematically gather information from multiple independent web sources, synthesize findings, and produce a structured research report
+  description: Systematically gather information from multiple independent web sources,
+    synthesize findings, and produce a structured research report
   domain: research
-  program_goal: Conduct thorough research by querying multiple sources, resolving conflicts, and producing a comprehensive, well-structured report.
+  program_goal: Conduct thorough research by querying multiple sources, resolving
+    conflicts, and producing a comprehensive, well-structured report.
   prerequisites:
-    - Understand the research objective and the key questions to answer
-    - Know what types of sources are needed (regulations, news, technical docs, etc.)
+  - Understand the research objective and the key questions to answer
+  - Know what types of sources are needed (regulations, news, technical docs, etc.)
   steps:
-    - "Step 1: Decompose the research topic into focused search queries that cover different aspects"
-    - "Step 2: Execute web searches using targeted queries; collect results from multiple independent sources"
-    - "Step 3: For each source, fetch the relevant content; evaluate source credibility and recency"
-    - "Step 4: Extract key facts, data points, and claims from each source; maintain source attribution"
-    - "Step 5: Cross-reference findings: if sources conflict, identify which is more authoritative or recent"
-    - "Step 6: Identify areas with insufficient evidence; conduct follow-up searches to fill gaps"
-    - "Step 7: Organize findings into a structured report with clear sections, logical flow, and source citations"
-    - "Step 8: Flag any unresolved conflicts or areas of uncertainty; do not fabricate consensus"
+  - 'Step 1: Decompose the research topic into focused search queries that cover different
+    aspects'
+  - 'Step 2: Execute web searches using targeted queries; collect results from multiple
+    independent sources'
+  - 'Step 3: For each source, fetch the relevant content; evaluate source credibility
+    and recency'
+  - 'Step 4: Extract key facts, data points, and claims from each source; maintain
+    source attribution'
+  - 'Step 5: Cross-reference findings: if sources conflict, identify which is more
+    authoritative or recent'
+  - 'Step 6: Identify areas with insufficient evidence; conduct follow-up searches
+    to fill gaps'
+  - 'Step 7: Organize findings into a structured report with clear sections, logical
+    flow, and source citations'
+  - 'Step 8: Flag any unresolved conflicts or areas of uncertainty; do not fabricate
+    consensus'
   common_pitfalls:
-    - "Relying on a single source: A single source may be incomplete, outdated, or biased."
-    - "Not verifying recency: Regulations and policies change; prioritize recent and official sources."
-    - "Fabricating details: If a fact cannot be verified, state it as unverified rather than guessing."
-    - "Plagiarizing source text: Rephrase findings in your own words with proper attribution."
-    - "Ignoring conflicting information: Acknowledging and analyzing conflicts is more valuable than ignoring them."
+  - 'Relying on a single source: A single source may be incomplete, outdated, or biased.'
+  - 'Not verifying recency: Regulations and policies change; prioritize recent and
+    official sources.'
+  - 'Fabricating details: If a fact cannot be verified, state it as unverified rather
+    than guessing.'
+  - 'Plagiarizing source text: Rephrase findings in your own words with proper attribution.'
+  - 'Ignoring conflicting information: Acknowledging and analyzing conflicts is more
+    valuable than ignoring them.'
+  trigger_keywords:
+  - multi-source
+  - web search
+  - reference
+  - cite
+  - 调研
+  - 多源
+  - 引用

@@ -1,22 +1,33 @@
-# T4a: Program Support Card - Multi-Service Discovery
-# Domain: workflow
-# Paper reference: T4a - Program Support Cards for skill availability
-
 - name: service_discovery
-  description: Discover and catalog available services and their capabilities in a multi-service environment
+  description: Discover and catalog available services and their capabilities in a
+    multi-service environment
   domain: workflow
-  program_goal: Identify all available services and their tool interfaces before orchestrating cross-system operations.
+  program_goal: Identify all available services and their tool interfaces before orchestrating
+    cross-system operations.
   prerequisites:
-    - Understand the overall system architecture or service landscape
-    - Know the available service endpoints or know where to query them
+  - Understand the overall system architecture or service landscape
+  - Know the available service endpoints or know where to query them
   steps:
-    - "Step 1: Enumerate all services in the environment (e.g., list available mock service APIs)"
-    - "Step 2: For each service, retrieve its tool definitions (available operations, input/output schemas)"
-    - "Step 3: Build a mental catalog: which service handles which type of data or operation"
-    - "Step 4: Identify dependencies or constraints between services (e.g., authentication, required parameters)"
-    - "Step 5: Confirm service availability and health before relying on them"
-    - "Step 6: Proceed with task decomposition using the discovered service catalog"
+  - 'Step 1: Enumerate all services in the environment (e.g., list available mock
+    service APIs)'
+  - 'Step 2: For each service, retrieve its tool definitions (available operations,
+    input/output schemas)'
+  - 'Step 3: Build a mental catalog: which service handles which type of data or operation'
+  - 'Step 4: Identify dependencies or constraints between services (e.g., authentication,
+    required parameters)'
+  - 'Step 5: Confirm service availability and health before relying on them'
+  - 'Step 6: Proceed with task decomposition using the discovered service catalog'
   common_pitfalls:
-    - "Using a service without checking availability: Leads to runtime errors mid-task."
-    - "Skipping the tool schema review: Incorrect API usage wastes time and may corrupt data."
-    - "Assuming all services are equally reliable: Check health endpoints when orchestrating critical operations."
+  - 'Using a service without checking availability: Leads to runtime errors mid-task.'
+  - 'Skipping the tool schema review: Incorrect API usage wastes time and may corrupt
+    data.'
+  - 'Assuming all services are equally reliable: Check health endpoints when orchestrating
+    critical operations.'
+  trigger_keywords:
+  - discover
+  - catalog
+  - endpoint
+  - capability
+  - 服务
+  - 接口
+  - 发现

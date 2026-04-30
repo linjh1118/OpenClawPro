@@ -1,8 +1,16 @@
 name: clawbench_official_data_analysis
 description: Data analysis, database, and data science tasks — SQL queries and SQLite
   operations, descriptive statistics (mean, median, mode, std_dev) from CSV data,
-  K-Means clustering with elbow method and min-max normalization, pandas data
-  pipelines, statistical tests, JOINs and GROUP BY
+  K-Means clustering with elbow method and min-max normalization, pandas data pipelines,
+  statistical tests, JOINs and GROUP BY, IQR outlier detection, quartile computation,
+  sales report generation with template filling
+domain: ''
+program_goal: Analyze structured data accurately and produce verified output files
+  matching the exact specification
+prerequisites:
+- All required input files must exist in the workspace before starting — never fabricate
+  or create missing input data
+- Understand the data schema (columns, types, relationships) before any computation
 trigger_keywords:
 - data analysis
 - data-analysis
@@ -19,6 +27,39 @@ trigger_keywords:
 - filter
 - mean median mode
 - clustering
+- markdown report
+- sales summary
+- ytd
+- pipeline stage
+- data processing
+- outlier
+- outlier detection
+- iqr
+- interquartile
+- quartile
+- percentile
+- sales report
+- report template
+- template filling
+common_pitfalls:
+- Never fabricate input data — if required files are missing, report the error instead
+  of creating fake data
+- Always verify numerical totals by independently re-computing from source values
+- When standardizing data, use empty string or null for missing values — never use
+  placeholder strings like 'unknown' that could break downstream parsing
+- Use json.dumps() to serialize Python values — never str(True) which gives the string
+  'True' instead of JSON boolean true
+- For pipeline stages, ensure each stage output has a flat, well-defined schema that
+  downstream stages can parse
+- 'For IQR/outlier detection: use statistics.quantiles(data, n=4) for quartile computation
+  (exclusive method). Do NOT use numpy.percentile with interpolation=''linear'' —
+  it uses the inclusive method and gives different Q1/Q3 values. statistics.quantiles
+  returns [Q1, Q2, Q3] for n=4'
+- 'For report template filling: replace ALL placeholders (e.g. {{YTD_TOTAL}}, {{REPORT_DATE}})
+  — verify none remain. Format numbers with commas using f''{value:,.2f}''. Sort tables
+  by the specified column. Use today''s date in YYYY-MM-DD format'
+- When standardizing data, use empty string or null for missing values — never use
+  placeholder strings like unknown that could break downstream parsing
 steps:
 - 'Step 1: Read all input files (CSVs, databases, JSON) to understand the data schema
   before analysis'
