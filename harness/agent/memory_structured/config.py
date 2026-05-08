@@ -45,7 +45,7 @@ class StructuredMemoryConfig:
 
     # LLM 更新频率控制（防止过度调用）
     # 每隔多少 iteration 做一次 LLM 状态更新（0=只用 initialize，禁用周期性更新）
-    llm_update_interval: int = 8
+    llm_update_interval: int = 4
     # 每次 LLM 更新时，收集最近多少条工具结果（buffer 大小）
     llm_update_buffer_size: int = 10
 

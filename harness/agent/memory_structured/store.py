@@ -288,7 +288,7 @@ class StructuredMemoryStore:
         self._tool_result_buffer.append({
             "tool_name": tool_name,
             "tool_args": tool_args,
-            "tool_result": tool_result[:2000] if tool_result else "",  # 截断避免过大
+            "tool_result": tool_result[:20000] if tool_result else "",  # 截断避免过大
             "iteration": self._iteration,
         })
 
@@ -381,7 +381,7 @@ class StructuredMemoryStore:
             tn = entry["tool_name"]
             tr = entry["tool_result"]
             # 截断每条结果
-            tr_short = tr[:500].replace("\n", "\\n") if tr else "(empty)"
+            tr_short = tr[:5000].replace("\n", "\\n") if tr else "(empty)"
             tool_summary_lines.append(f"[{tn}] {tr_short}")
 
         system_prompt = """你是一个结构化状态跟踪助手。
