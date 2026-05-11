@@ -811,7 +811,7 @@ class NanoBotAgent(BaseAgent):
                 to_role="planner",
                 reason="tool_error",
                 iteration=iteration,
-                detail=revision_reason[:500],
+                detail=revision_reason,
             )
             self._record_collab_events([handoff_event], register_manager=False)
 

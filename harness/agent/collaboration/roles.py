@@ -80,7 +80,7 @@ Be specific about what tools to use and what the expected outcomes are."""
                 event_type="plan_generated",
                 role="planner",
                 iteration=iteration,
-                data={"plan": plan, "raw_response": content[:500]},
+                data={"plan": plan, "raw_response": content},
             )
             self._events.append(event)
 
@@ -250,7 +250,7 @@ Always verify your own work before presenting it as complete."""
                         iteration=iteration,
                         data={
                             "step": step_num,
-                            "content": final_result[:500],
+                            "content": final_result,
                             "iterations": exec_iteration,
                             "tools_used": len(tool_calls_made),
                         },
@@ -271,7 +271,7 @@ Always verify your own work before presenting it as complete."""
                     tool_calls_made.append({
                         "tool": tool_name,
                         "args": args,
-                        "result": tool_result[:500] if tool_result else "",
+                        "result": tool_result if tool_result else "",
                     })
 
                     # Add assistant message with tool call
@@ -300,7 +300,7 @@ Always verify your own work before presenting it as complete."""
                         event_type="tool_called",
                         role="executor",
                         iteration=iteration,
-                        data={"step": step_num, "tool": tool_name, "args": args, "result": tool_result[:500]},
+                        data={"step": step_num, "tool": tool_name, "args": args, "result": tool_result},
                     )
                     self._events.append(event)
 
@@ -352,9 +352,9 @@ Always verify your own work before presenting it as complete."""
         data: Dict[str, Any] = {"step": step_num}
         if tool_used is not None:
             data["tool"] = tool_used
-            data["result"] = result[:200]
+            data["result"] = result
         else:
-            data["content"] = result[:200]
+            data["content"] = result
         if error:
             data["error"] = error
         event = CollabEvent(
@@ -537,7 +537,7 @@ Next action: {description of next subtask or "TASK_COMPLETE"}
                 event_type="subtask_dispatched",
                 role="commander",
                 iteration=iteration,
-                data={"subtask": subtask.get('description', '')[:200], "dispatch": content[:1000]},
+                data={"subtask": subtask.get('description', ''), "dispatch": content},
             )
             self._events.append(event)
 
@@ -1028,8 +1028,8 @@ If PASS, briefly confirm what you verified."""
                             data={
                                 "turn": turn + 1,
                                 "tool": tool_name,
-                                "args_preview": str(args)[:200],
-                                "result_preview": str(tool_result)[:500],
+                                "args_preview": str(args),
+                                "result_preview": str(tool_result),
                             },
                         )
                         self._events.append(event)
@@ -1112,7 +1112,7 @@ If PASS, briefly confirm what you verified."""
         round_info = {
             "iteration": iteration,
             "verdict": verdict,
-            "feedback_preview": feedback[:500],
+            "feedback_preview": feedback,
             "tool_calls": tool_call_count,
         }
         self._verification_rounds.append(round_info)
@@ -1171,7 +1171,7 @@ If PASS, briefly confirm what you verified."""
                     event_type="critique",
                     role="verifier",
                     iteration=iteration,
-                    data={"verdict": verdict, "feedback": content[:300]},
+                    data={"verdict": verdict, "feedback": content},
                 )
                 self._events.append(event)
 
@@ -1204,7 +1204,7 @@ If PASS, briefly confirm what you verified."""
             iteration=iteration,
             data={
                 "verdict": verdict,
-                "feedback": feedback[:300],
+                "feedback": feedback,
                 "step": step.get("step", "?"),
             },
         )
