@@ -325,7 +325,7 @@ class NanoBotAgent(BaseAgent):
         async def plan_first_llm_adapter(prompt: str, max_tokens: int, temperature: float) -> str:
             """Adapter that converts PlanFirst's llm_fn signature to NanoBotAgent._call_llm."""
             messages = [
-                {"role": "system", "content": "你是一个任务规划助手。根据用户给出的任务，输出简洁的执行步骤列表，格式为：1. [工具名] 操作描述。不要输出任何与任务无关的内容。"},
+                {"role": "system", "content": "You are an execution planner. Given a task, output a concise numbered list of steps. Format: 1. [tool_name] action description. Output ONLY the plan — no other text."},
                 {"role": "user", "content": prompt},
             ]
             result = await self._call_llm(messages, max_tokens=max_tokens)
@@ -1040,10 +1040,15 @@ class NanoBotAgent(BaseAgent):
                     messages.append({
                         "role": "system",
                         "content": (
-                            f"Here is the execution plan for this task:\n\n{plan_context}\n\n"
-                            f"IMPORTANT: Start by using list_dir to discover all files in {self.effective_workspace}/, "
-                            "then read the input files with read_file. "
-                            "Do NOT create or fabricate any input data — all necessary files already exist in the workspace."
+                            f"[EXECUTION PLAN — FOLLOW THIS PLAN STEP BY STEP]\n\n"
+                            f"{plan_context}\n\n"
+                            f"[/EXECUTION PLAN]\n\n"
+                            f"RULES:\n"
+                            f"1. Start by using list_dir to discover all files in {self.effective_workspace}/, "
+                            f"then read_file to inspect them.\n"
+                            f"2. Do NOT create or fabricate any input data — all necessary files already exist.\n"
+                            f"3. After each tool call, verify the result matches the expected outcome before proceeding.\n"
+                            f"4. If a step fails, diagnose the root cause before retrying."
                         ),
                     })
                 else:
@@ -1113,9 +1118,23 @@ class NanoBotAgent(BaseAgent):
                         "reason": replan_decision.reason,
                         "signals": [{"type": s.signal_type, "desc": s.description} for s in replan_decision.signals],
                     })
-                    # 生成新计划
+                    # 生成新计划——附带失败诊断上下文
                     if self._plan_first.config.enabled:
-                        new_plan = await self._plan_first.generate_plan(current_task, context="Previous plan failed. ")
+                        # 构建诊断上下文：收集最近的失败信号和反思结果
+                        diag_parts = [f"Replan reason: {replan_decision.reason}"]
+                        if replan_decision.signals:
+                            for sig in replan_decision.signals[-3:]:
+                                diag_parts.append(f"  - {sig.signal_type}: {sig.description}")
+                        if self._failure_reflection.failure_history:
+                            last_fail = self._failure_reflection.failure_history[-1]
+                            diag_parts.append(f"Last failure: {last_fail.tool_name} — {last_fail.error_type}: {last_fail.error_message[:150]}")
+                        if self._failure_reflection._last_reflected_failure_count > 0:
+                            last_plan = self._plan_first.current_plan
+                            if last_plan and last_plan.raw_plan:
+                                diag_parts.append(f"Previous plan preview: {last_plan.raw_plan[:200]}")
+                        diag_context = "\n".join(diag_parts)
+
+                        new_plan = await self._plan_first.generate_plan(current_task, context=diag_context)
                         plan_context = new_plan.to_context()
                         if plan_context:
                             self._transcript.append({
@@ -1126,7 +1145,12 @@ class NanoBotAgent(BaseAgent):
                             # 将新计划注入 messages，引导模型调整策略
                             messages.append({
                                 "role": "system",
-                                "content": f"The previous plan failed. Here is a revised plan:\n\n{plan_context}",
+                                "content": (
+                                    f"[REVISED EXECUTION PLAN — PREVIOUS PLAN FAILED]\n"
+                                    f"Failure diagnosis:\n{diag_context}\n\n"
+                                    f"Revised plan:\n{plan_context}\n\n"
+                                    f"Adjust your approach based on the failure diagnosis above."
+                                ),
                             })
                     self._replan_trigger.confirm_replan()
 
@@ -1568,11 +1592,25 @@ class NanoBotAgent(BaseAgent):
                             "suggested_correction": reflection.suggested_correction,
                         })
                         # 将反思结果注入 messages，帮助模型纠正方向
+                        category_hint = ""
+                        rc = reflection.root_cause or ""
+                        if rc.startswith("["):
+                            cat = rc[1:2]  # e.g. "A" from "[A] ..."
+                            category_hints = {
+                                "A": "Re-read the task requirements carefully. List all constraints before proceeding.",
+                                "B": "Double-check tool parameters against the schema. Verify file paths exist before using them.",
+                                "C": "Review your previous tool outputs. Re-read intermediate results you may have lost track of.",
+                                "D": "Use read_file to verify your output files match the task's specification before finishing.",
+                                "E": "Consider a simpler, more direct approach. Avoid unnecessary tool calls.",
+                            }
+                            category_hint = f"\nCategory-specific guidance: {category_hints.get(cat, '')}"
+
                         reflection_msg = (
-                            f"Failure Analysis:\n"
+                            f"[FAILURE DIAGNOSIS]\n"
                             f"- Root cause: {reflection.root_cause}\n"
-                            f"- Suggested correction: {reflection.suggested_correction}\n"
-                            f"Please adjust your approach accordingly."
+                            f"- Suggested correction: {reflection.suggested_correction}"
+                            f"{category_hint}\n"
+                            f"[/FAILURE DIAGNOSIS]"
                         )
                         messages.append({"role": "system", "content": reflection_msg})
 

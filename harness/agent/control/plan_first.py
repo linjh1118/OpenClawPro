@@ -198,35 +198,32 @@ class PlanFirst:
 
     def _build_plan_prompt(self, task: str, context: str) -> str:
         """构建计划生成 prompt"""
-        return f"""You are an execution planner. Think carefully before planning.
+        context_block = f"\nDIAGNOSTIC CONTEXT:\n{context}\n" if context.strip() else ""
 
-Task: {task}
+        return f"""You are an execution planner. Generate a step-by-step plan for the following task.
 
-{context}
+TASK:
+{task}
+{context_block}
+COMMON FAILURE MODES TO AVOID:
+- (A) Goal Misunderstanding: Do NOT assume file names, paths, or formats — discover them first. Do NOT fabricate input data.
+- (B) Action Instantiation: Verify tool parameters against the actual schema before calling. Check file existence before writing.
+- (C) State Management: Carry forward intermediate results across steps. Do NOT re-derive facts you already obtained.
+- (D) Verification Gap: After each write, confirm the output matches the task's output specification.
+- (E) Strategy Selection: Follow the most direct path — avoid redundant reads, unnecessary conversions, or speculative tool calls.
 
-CRITICAL RULES:
-1. ALWAYS start by reading existing files in the workspace (use list_dir to discover files, then read_file to inspect them).
-2. NEVER fabricate, invent, or create sample/mock input data. All input data already exists in the workspace files.
-3. If a file is not found, use list_dir to search the workspace directory for the correct filename or path.
-4. Focus on PROCESSING existing data, not creating it.
-
-First, analyze the task feasibility:
-- Are there any contradictory or impossible requirements?
-- Are all constraints simultaneously satisfiable?
-
-Then generate a concise execution plan (max {self.config.max_plan_length} tokens):
-## Plan
+Generate a concise execution plan (max {self.config.max_plan_length} tokens):
 1. [list_dir] Discover all files in the workspace
-2. [read_file] Read the instruction.md and all input files
+2. [read_file] Read the instruction file and all input files to understand exact requirements
 3. [Action] Process the data as required
-4. [write_file] Write the output files
-...
+4. [Action] ...
+5. [write_file] Write the output files with exact naming and format
+6. [read_file] Verify output files match the task specification
 
-Focus on:
-- Start with file discovery and reading (list_dir → read_file)
-- Required tools in correct order
-- Expected outcomes of each step
-- Critical checkpoints
+For each step include:
+- The tool to use (in brackets)
+- What to do and why
+- What to check before moving on (checkpoint)
 """
 
     def _parse_plan(self, task: str, plan_text: str) -> ExecutionPlan:

@@ -162,21 +162,29 @@ class FailureReflection:
         )
 
     async def _llm_reflect(self, current_plan: str) -> ReflectionResult:
-        """使用 LLM 进行反思"""
+        """使用 LLM 进行反思，引导模型从已知失败类别中诊断"""
         failure_summary = self._summarize_failures()
 
-        prompt = f"""Analyze the following failures and provide a brief reflection:
+        prompt = f"""Analyze the following tool-call failures and classify the root cause.
 
+FAILURE LOG:
 {failure_summary}
 
-Current Plan:
-{current_plan}
+CURRENT PLAN:
+{current_plan or "(No plan available)"}
 
-Provide a brief reflection (max 300 tokens) covering:
-1. Root cause of the failure(s)
-2. Suggested correction
-3. Whether retry is advisable
-"""
+KNOWN FAILURE CATEGORIES (pick the best fit):
+- A (Goal Misunderstanding): Misinterpreted task requirements, missed constraints, or fabricated assumptions.
+- B (Action Instantiation): Wrong tool, missing/invalid parameters, or incorrect argument values.
+- C (State Management): Lost track of intermediate results, overwrote working state, or failed to propagate facts.
+- D (Verification Gap): Did not check whether the output matches task requirements before finishing.
+- E (Strategy Selection): Chose an inefficient or incorrect approach, wrong tool sequence, or unnecessary steps.
+
+Respond EXACTLY in this format (one line each):
+Failure Category: [A/B/C/D/E]
+Root Cause: [one sentence explaining why]
+Correction: [specific actionable step to fix it]
+Retry: [yes/no]"""
 
         try:
             response = await self.llm_fn(
@@ -186,32 +194,59 @@ Provide a brief reflection (max 300 tokens) covering:
             )
 
             text = response.strip() if response else ""
-
-            # 简单解析
-            lines = text.split("\n")
-            root_cause = None
-            correction = None
-            should_retry = True
-
-            for line in lines:
-                line = line.strip().lower()
-                if "root cause" in line or "原因" in line:
-                    root_cause = line.split(":", 1)[-1].strip() if ":" in line else line
-                elif "suggested" in line or "correction" in line or "建议" in line:
-                    correction = line.split(":", 1)[-1].strip() if ":" in line else line
-                elif "retry" in line and "no" in line:
-                    should_retry = False
-
-            return ReflectionResult(
-                reflection_text=text,
-                root_cause=root_cause,
-                suggested_correction=correction,
-                should_retry=should_retry,
-                confidence=0.7,
-            )
+            return self._parse_structured_reflection(text)
         except Exception as e:
             logger.warning(f"LLM reflection failed: {e}")
             return self._rule_based_reflect()
+
+    def _parse_structured_reflection(self, text: str) -> ReflectionResult:
+        """解析结构化反思输出"""
+        import re
+
+        root_cause = None
+        correction = None
+        should_retry = True
+        category = None
+
+        for line in text.split("\n"):
+            line_stripped = line.strip()
+            lower = line_stripped.lower()
+            # 匹配 "Failure Category: A" 或 "Category: B"
+            if "failure category" in lower or (lower.startswith("category:") and category is None):
+                m = re.search(r'[A-E]', line_stripped.upper())
+                if m:
+                    category = m.group()
+            elif "root cause" in lower or "root_cause" in lower:
+                val = line_stripped.split(":", 1)[-1].strip() if ":" in line_stripped else line_stripped
+                if val:
+                    root_cause = val
+            elif "correction" in lower or "suggested" in lower:
+                val = line_stripped.split(":", 1)[-1].strip() if ":" in line_stripped else line_stripped
+                if val:
+                    correction = val
+            elif "retry" in lower:
+                if "no" in lower or "false" in lower:
+                    should_retry = False
+
+        # 把 category 信息附到 root_cause 前面，方便下游使用
+        if category and root_cause:
+            root_cause = f"[{category}] {root_cause}"
+        elif category:
+            root_cause = f"[{category}] (unspecified root cause)"
+        elif not root_cause:
+            # 回退：取第一行非空内容
+            for line in text.split("\n"):
+                if line.strip():
+                    root_cause = line.strip()
+                    break
+
+        return ReflectionResult(
+            reflection_text=text,
+            root_cause=root_cause,
+            suggested_correction=correction,
+            should_retry=should_retry,
+            confidence=0.75 if category else 0.6,
+        )
 
     def _summarize_failures(self) -> str:
         """总结失败历史"""
