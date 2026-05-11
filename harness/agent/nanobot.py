@@ -674,6 +674,24 @@ class NanoBotAgent(BaseAgent):
                 "type": "collab_event",
                 **event.to_dict(),
             })
+            # 同时记录为 message 类型，以便 grading 系统能识别对话内容
+            data = event.data or {}
+            content = None
+            event_type = event.event_type
+            if event_type == "step_executed" and data.get("content"):
+                content = data["content"]
+            elif event_type in ("final_synthesis", "plan_next") and data.get("raw_response"):
+                content = data["raw_response"]
+            elif event_type == "commander_executor_complete" and data.get("final_synthesis_preview"):
+                content = data["final_synthesis_preview"]
+            if content:
+                self._transcript.append({
+                    "type": "message",
+                    "message": {
+                        "role": "assistant",
+                        "content": content,
+                    }
+                })
 
     def _consume_role_events(self) -> None:
         """Flush buffered collaboration role events into the transcript."""
