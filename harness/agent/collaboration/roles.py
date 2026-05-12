@@ -397,6 +397,7 @@ class CommanderRole:
 3. **Result Synthesis**: Integrate results from completed subtasks to inform next steps
 4. **Progress Tracking**: Monitor overall progress toward the main goal
 5. **Adaptive Replanning**: Modify the remaining subtask list based on executor feedback
+6. **Strict Completion Validation**: Before declaring TASK_COMPLETE, you MUST verify ALL requirements from the original task are satisfied
 
 ## Dispatch Format
 
@@ -406,6 +407,7 @@ When dispatching a subtask, use this format:
 Subtask {n}: {subtask description}
 Expected output: {what the executor should produce}
 Success criteria: {how to verify completion}
+Output artifacts: {list specific files or outputs this subtask must create}
 [/DISPATCH]
 ```
 
@@ -415,6 +417,11 @@ After receiving executor results, provide a brief synthesis:
 ```
 [SYNTHESIS]
 Results so far: {summary of completed work}
+Requirements status:
+- Requirement 1: SATISFIED / MISSING (reason)
+- Requirement 2: SATISFIED / MISSING (reason)
+...
+Missing requirements: {list any unmet requirements, or "None"}
 Next action: {description of next subtask or "TASK_COMPLETE"}
 [/SYNTHESIS]
 ```
@@ -423,8 +430,12 @@ Next action: {description of next subtask or "TASK_COMPLETE"}
 
 - Be specific in subtask descriptions to avoid goal drift
 - Each subtask should be self-contained and verifiable
+- ALWAYS specify output artifacts (file paths, data structures) in Expected output
 - Monitor for early completion or task creep
-- If executor reports issues, diagnose and either modify the subtask or the overall plan"""
+- If executor reports issues, diagnose and either modify the subtask or the overall plan
+- NEVER declare TASK_COMPLETE unless you have verified ALL original requirements are met
+- If the executor created wrong files or missed outputs, dispatch a corrective subtask immediately
+- When verifying completion, explicitly check: (1) all required files exist, (2) all required data is present, (3) all required formats are correct"""
 
     def __init__(
         self,
@@ -603,20 +614,26 @@ Next action: {description of next subtask or "TASK_COMPLETE"}
 
 Based on the executor's result, decide what to do next:
 
-1. If the task is COMPLETED: Output [TASK_COMPLETE] with brief final summary
-2. If more work is needed: Output [DISPATCH] with a NEW subtask in this format:
+**CRITICAL: Before declaring completion, you MUST cross-check EVERY requirement from the Original Task.**
+
+1. If the task is COMPLETED and ALL requirements are verified: Output [TASK_COMPLETE] with brief final summary
+2. If ANY requirement is missing or incorrect: Output [DISPATCH] with a corrective subtask
+3. If more work is needed: Output [DISPATCH] with a NEW subtask in this format:
 
 [DISPATCH]
 Subtask: {clear description of what executor should do next}
 Expected output: {what this subtask should produce}
 Success criteria: {how to verify completion}
+Output artifacts: {specific files or outputs to create}
 [/DISPATCH]
 
 Important:
 - Create NEW subtasks dynamically based on what actually happened, not predefined steps
 - If executor took a wrong path, create a corrective subtask
 - If executor missed parts, create a supplemental subtask
-- Be specific and actionable in subtask descriptions"""
+- If executor reported success but you suspect missing outputs, create a verification subtask
+- Be specific and actionable in subtask descriptions
+- Do NOT declare TASK_COMPLETE just because the executor reported success — verify the actual outputs match requirements"""
         messages.append({"role": "user", "content": user_content})
 
         try:

@@ -52,6 +52,8 @@ class CollabConfig:
     verifier_model: str | None = None
     # verifier 验证时最多调用工具轮次
     max_verifier_turns: int = 10
+    # commander_executor 模式下：每个子任务失败/输出缺失后的最大重试次数
+    max_retries_per_subtask: int = 2
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -69,6 +71,7 @@ class CollabConfig:
             "planner_model": self.planner_model,
             "verifier_model": self.verifier_model,
             "max_verifier_turns": self.max_verifier_turns,
+            "max_retries_per_subtask": self.max_retries_per_subtask,
         }
 
     @classmethod

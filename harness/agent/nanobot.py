@@ -839,6 +839,29 @@ class NanoBotAgent(BaseAgent):
         ]
         messages.append(self._build_plan_system_message(plan, revision=bool(revision_reason)))
 
+    async def _check_output_files_exist(self, file_paths: List[str]) -> List[str]:
+        """Check if expected output files exist by attempting to read them via tools.
+
+        Returns:
+            List of file paths that are MISSING.
+        """
+        missing = []
+        for filepath in file_paths:
+            try:
+                result = await self._execute_tool({
+                    "id": "check",
+                    "function": {
+                        "name": "read_file",
+                        "arguments": json.dumps({"path": filepath}),
+                    },
+                })
+                if result.startswith("Error") or "not found" in result.lower() or "does not exist" in result.lower():
+                    missing.append(filepath)
+            except Exception as e:
+                self._logger.warning(f"[Collab-CmdExe] Failed to check file {filepath}: {e}")
+                missing.append(filepath)
+        return missing
+
     async def _run_commander_executor_flow(
         self,
         current_task: str,
@@ -848,6 +871,11 @@ class NanoBotAgent(BaseAgent):
 
         Commander decomposes task into subtasks and dispatches them to Executor.
         This provides proactive goal grounding (A段断裂修复) through explicit task decomposition.
+
+        Improvements:
+        - ALL initially decomposed subtasks are queued and executed (no dropping)
+        - Post-execution output validation: checks if write_file outputs actually exist
+        - Retry loop: failed subtasks or missing outputs are retried with feedback
 
         Args:
             current_task: The main task to execute
@@ -891,6 +919,9 @@ class NanoBotAgent(BaseAgent):
             tool_defs = self._tools.get_definitions()
             self._executor_role.set_tool_definitions(tool_defs)
 
+        # Step 2: Queue ALL initially decomposed subtasks (FIFO)
+        subtask_queue: List[Dict[str, Any]] = list(subtasks)
+
         # Helper to build context from completed subtasks
         def build_context():
             if not all_results:
@@ -900,13 +931,34 @@ class NanoBotAgent(BaseAgent):
                 ctx += f"\n[Subtask {r.get('subtask_id', '?')} completed]: {r.get('result', '')}"
             return ctx if ctx else None
 
-        # Step 2: Dynamic iterative execution - Commander creates subtasks on-the-fly
-        current_subtask = subtasks[0] if subtasks else None
-
+        # Step 3: Iterative execution loop
         while self._handoff_manager.can_handoff():
-            if current_subtask is None:
-                break
+            # If queue is empty, ask commander for next subtask or completion
+            if not subtask_queue:
+                plan_result = await self._commander_role.plan_next(
+                    {"subtask_id": len(all_results), "description": "queue_empty", "result": "", "success": True},
+                    original_task=current_task,
+                    completed_subtasks=all_results,
+                    overall_context=build_context(),
+                    iteration=iteration,
+                )
+                self._consume_role_events()
+                iteration += 1
 
+                if plan_result.get("is_complete"):
+                    break
+
+                next_subtask = plan_result.get("next_subtask")
+                if next_subtask:
+                    next_subtask["id"] = len(all_results) + 1
+                    subtask_queue.append(next_subtask)
+                    self._logger.info(f"[Collab-CmdExe] Commander added new subtask to queue: {next_subtask.get('description', '')[:50]}...")
+                else:
+                    self._logger.warning("[Collab-CmdExe] Queue empty and no new subtask, declaring complete")
+                    break
+
+            # Pop next subtask from queue
+            current_subtask = subtask_queue.pop(0)
             subtask_id = current_subtask.get("id", len(all_results) + 1)
 
             # Record handoff from commander to executor
@@ -918,25 +970,81 @@ class NanoBotAgent(BaseAgent):
 
             self._logger.info(f"[Collab-CmdExe] Dispatching subtask {subtask_id}: {current_subtask.get('description', '')[:80]}...")
 
-            # Execute the subtask
-            step = {
-                "step": subtask_id,
-                "description": current_subtask.get("description", ""),
-                "action": "continue",
-            }
-            exec_result = await self._executor_role.execute_step(step, context=build_context(), iteration=iteration)
-            self._consume_role_events()
-            iteration += 1
+            # Retry loop for this subtask
+            max_retries = self._collab_config.max_retries_per_subtask
+            subtask_success = False
+            last_error = None
+            exec_result = None
+            final_attempt = 0
 
-            # Record result
+            for attempt in range(max_retries + 1):
+                final_attempt = attempt
+                step = {
+                    "step": subtask_id,
+                    "description": current_subtask.get("description", ""),
+                    "action": "continue",
+                }
+
+                # Build execution context with retry feedback if needed
+                exec_context = build_context()
+                if attempt > 0 and last_error:
+                    retry_note = (
+                        f"\n\n[RETRY ATTEMPT {attempt}/{max_retries}] "
+                        f"Previous attempt failed: {last_error}\n"
+                        f"Please correct this issue and ensure all expected outputs are created."
+                    )
+                    exec_context = (exec_context or "") + retry_note
+
+                exec_result = await self._executor_role.execute_step(
+                    step, context=exec_context, iteration=iteration
+                )
+                self._consume_role_events()
+                iteration += 1
+
+                # Check 1: Executor reported an error
+                if not exec_result.get("success"):
+                    last_error = exec_result.get("error", "Unknown execution error")
+                    self._logger.warning(f"[Collab-CmdExe] Subtask {subtask_id} execution error (attempt {attempt}): {last_error}")
+                    if attempt < max_retries:
+                        continue
+                    break
+
+                # Check 2: Validate output files mentioned in write_file tool calls
+                tool_calls = exec_result.get("tool_calls", [])
+                written_files = []
+                for tc in tool_calls:
+                    if tc.get("tool") == "write_file":
+                        args = tc.get("args", {})
+                        path = args.get("path", "")
+                        if path:
+                            written_files.append(path)
+
+                if written_files:
+                    missing_files = await self._check_output_files_exist(written_files)
+                    if missing_files:
+                        last_error = f"Missing expected output files: {', '.join(missing_files)}"
+                        self._logger.warning(f"[Collab-CmdExe] Subtask {subtask_id} missing outputs (attempt {attempt}): {last_error}")
+                        if attempt < max_retries:
+                            continue
+
+                # All checks passed
+                subtask_success = True
+                break
+
+            # Record final subtask result (only the final attempt)
             subtask_record = {
                 "subtask_id": subtask_id,
                 "description": current_subtask.get("description", ""),
-                "result": exec_result.get("result", ""),
-                "error": exec_result.get("error"),
-                "success": exec_result.get("success", False),
+                "result": exec_result.get("result", "") if exec_result else "",
+                "error": last_error if not subtask_success else None,
+                "success": subtask_success,
+                "attempts": final_attempt + 1,
             }
             all_results.append(subtask_record)
+
+            self._logger.info(
+                f"[Collab-CmdExe] Subtask {subtask_id} finished: success={subtask_success}, attempts={final_attempt + 1}"
+            )
 
             # Record handoff from executor back to commander
             handoff_event = self._handoff_manager.record_handoff(
@@ -947,7 +1055,7 @@ class NanoBotAgent(BaseAgent):
 
             self._handoff_manager._handoff_count += 1
 
-            # Step 3: Commander dynamically plans next step based on execution result
+            # Step 4: Commander plans next step based on execution result
             plan_result = await self._commander_role.plan_next(
                 subtask_record,
                 original_task=current_task,
@@ -958,22 +1066,18 @@ class NanoBotAgent(BaseAgent):
             self._consume_role_events()
             iteration += 1
 
-            if plan_result.get("is_complete"):
-                self._logger.info("[Collab-CmdExe] Commander signaled task complete")
+            # Add any new subtask from commander to the queue
+            new_subtask = plan_result.get("next_subtask")
+            if new_subtask:
+                new_subtask["id"] = len(all_results) + len(subtask_queue) + 1
+                subtask_queue.append(new_subtask)
+                self._logger.info(f"[Collab-CmdExe] Commander queued new subtask: {new_subtask.get('description', '')[:50]}...")
+
+            if plan_result.get("is_complete") and not subtask_queue:
+                self._logger.info("[Collab-CmdExe] Commander signaled task complete and queue is empty")
                 break
 
-            # Get next subtask (may be newly created by Commander dynamically)
-            current_subtask = plan_result.get("next_subtask")
-
-            # Sanity check: if no next subtask and not complete, create fallback
-            if current_subtask is None and not plan_result.get("is_complete"):
-                self._logger.warning("[Collab-CmdExe] No next subtask from commander, creating fallback")
-                current_subtask = {
-                    "id": subtask_id + 1,
-                    "description": f"Continue task execution after: {subtask_record.get('description', '')[:100]}",
-                }
-
-        # Step 3: Commander generates final synthesis
+        # Step 5: Commander generates final synthesis
         self._logger.info(f"[Collab-CmdExe] Generating final synthesis ({len(all_results)} subtasks completed)")
         final_result = await self._commander_role.generate_final_synthesis(
             current_task,
